@@ -1,8 +1,11 @@
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.route('http://localhost:8080/users', async (route, request) => {
-    if (request.method() === 'POST') {
+  await page.route('**/api/**', async (route, request) => {
+    const url = new URL(request.url());
+    const { pathname } = url;
+
+    if (pathname === '/api/users' && request.method() === 'POST') {
       await route.fulfill({
         status: 201,
         contentType: 'application/json',
@@ -11,39 +14,88 @@ test.beforeEach(async ({ page }) => {
       return;
     }
 
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([{ id: 99, username: 'alice', email: 'alice@example.com' }]),
-    });
-  });
+    if (pathname === '/api/users') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            id: 99,
+            username: 'alice',
+            email: 'alice@example.com',
+          },
+        ]),
+      });
+      return;
+    }
 
-  await page.route('http://localhost:8080/projects', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([{ id: 1, name: 'Projet E2E', description: 'Projet mocke' }]),
-    });
-  });
+    if (pathname === '/api/projects') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            id: 1,
+            name: 'Projet E2E',
+            description: 'Projet mocke',
+            owner: { id: 99 },
+          },
+        ]),
+      });
+      return;
+    }
 
-  await page.route('http://localhost:8080/tasks', async (route) => {
+    if (pathname === '/api/tasks') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            id: 10,
+            title: 'Verifier inscription',
+            description: 'Controle e2e',
+            status: 'TODO',
+            priority: 'MEDIUM',
+            dueDate: '2026-03-20',
+            endDate: '2026-03-20',
+            project: { id: 1 },
+            createdBy: { id: 99 },
+            assignedTo: { id: 99 },
+          },
+        ]),
+      });
+      return;
+    }
+
+    if (pathname === '/api/project-members') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          {
+            id: 201,
+            role: 'ADMIN',
+            project: { id: 1 },
+            user: { id: 99 },
+          },
+        ]),
+      });
+      return;
+    }
+
+    if (pathname === '/api/project-invitations' || pathname === '/api/notifications' || pathname === '/api/task-histories') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([]),
+      });
+      return;
+    }
+
     await route.fulfill({
-      status: 200,
+      status: 404,
       contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          id: 10,
-          title: 'Verifier inscription',
-          description: 'Controle e2e',
-          status: 'TODO',
-          priority: 'MEDIUM',
-          projectId: 1,
-          createdById: 99,
-          assignedToId: 99,
-          dueDate: '2026-03-20T00:00:00.000Z',
-          endDate: '2026-03-20T00:00:00.000Z',
-        },
-      ]),
+      body: JSON.stringify({ message: `Unhandled route in test: ${pathname}` }),
     });
   });
 });

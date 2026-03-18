@@ -399,6 +399,7 @@ Ce pipeline :
 
 - lance les tests backend Maven
 - lance les tests frontend Angular
+- lance les tests end-to-end Playwright du frontend
 - build les images Docker backend et frontend
 - push les images sur Docker Hub uniquement lors d'un `push` sur `main`
 
