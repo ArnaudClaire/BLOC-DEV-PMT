@@ -1,0 +1,65 @@
+<section class="board-panel">
+@if (loading()) {
+    <div class="loading-state">Chargement du Kanban...</div>
+  } @else if (projectsCount() === 0) {
+    <div class="empty-state">
+      <h2>Commence par creer un projet</h2>
+      <p>Le backend ne retourne encore aucun projet. Cree ton premier projet dans le panneau de gauche.</p>
+    </div>
+  } @else {
+    <div class="board-header">
+      <div>
+        <h2>{{ selectedProject()?.name || 'Tous les projets' }}</h2>
+        <p>
+          @if (selectedProject()) {
+            {{ selectedProject()?.description || 'Vue du projet selectionne.' }}
+          } @else {
+            Vue transverse de tous les projets.
+          }
+        </p>
+      </div>
+    </div>
+
+    <div class="kanban-board">
+      @for (column of columns(); track trackByColumn($index, column)) {
+        <article class="kanban-column" [attr.data-tone]="column.tone">
+          <header>
+            <div>
+              <h3>{{ column.label }}</h3>
+              <span>{{ column.tasks.length }} tache(s)</span>
+            </div>
+          </header>
+
+          <div class="kanban-stack">
+            @if (column.tasks.length === 0) {
+              <p class="empty-column">Aucune tache dans cette colonne.</p>
+            } @else {
+              @for (task of column.tasks; track task.id) {
+                <article class="task-card">
+                  <div class="task-topline">
+                    <span class="priority-pill" [attr.data-priority]="task.priority">{{ task.priority }}</span>
+                    <span class="project-pill">{{ task.projectName }}</span>
+                  </div>
+
+                  <h4>{{ task.title }}</h4>
+                  <p>{{ task.description || 'Pas de description fournie.' }}</p>
+
+                  <dl class="task-meta">
+                    <div>
+                      <dt>Assigne</dt>
+                      <dd>{{ task.assigneeName }}</dd>
+                    </div>
+                    <div>
+                      <dt>Echeance</dt>
+                      <dd>{{ task.dueDateLabel }}</dd>
+                    </div>
+                  </dl>
+                </article>
+              }
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,36 @@
+<section class="panel-card">
+  <div class="panel-head">
+    <h2>Nouveau projet</h2>
+    <span class="subtle">POST /projects</span>
+  </div>
+
+  <form class="stack-form" [formGroup]="form()" (ngSubmit)="formSubmitted.emit()">
+    <label>
+      <span>Nom du projet</span>
+      <input formControlName="name" type="text" placeholder="Migration API, Sprint mobile..." />
+    </label>
+    @if (form().controls['name'].invalid && form().controls['name'].touched) {
+      <p class="message error">Le nom du projet doit contenir au moins 3 caracteres.</p>
+    }
+
+    <label>
+      <span>Description</span>
+      <textarea formControlName="description" rows="4" placeholder="Objectif, livrables, equipe..."></textarea>
+    </label>
+    @if (form().controls['description'].invalid && form().controls['description'].touched) {
+      <p class="message error">La description doit contenir au moins 10 caracteres.</p>
+    }
+
+    <label>
+      <span>Date de demarrage</span>
+      <input formControlName="startDate" type="date" />
+    </label>
+    @if (form().controls['startDate'].invalid && form().controls['startDate'].touched) {
+      <p class="message error">La date de demarrage est obligatoire.</p>
+    }
+
+    <button class="primary-button" type="submit" [disabled]="saving()">
+      {{ saving() ? 'Creation...' : 'Creer le projet' }}
+    </button>
+  </form>
+</section>

@@ -1,0 +1,46 @@
+<section class="dashboard-page">
+  <app-dashboard-hero
+    [activeProjects]="activeProjects()"
+    [totalTasks]="totalTasks()"
+    [completedTasks]="completedTasks()"
+  />
+
+  @if (errorMessage()) {
+    <p class="message error">{{ errorMessage() }}</p>
+  }
+
+  <div class="workspace-grid">
+    <aside class="side-panel">
+      <app-dashboard-project-filter
+        [projects]="projects()"
+        [selectedProjectId]="selectedProjectId()"
+        (projectSelected)="selectProject($event)"
+        (refreshRequested)="loadData()"
+      />
+
+      <app-dashboard-project-form
+        [form]="projectForm"
+        [saving]="savingProject()"
+        (formSubmitted)="createProject()"
+      />
+
+      <app-dashboard-task-form
+        [form]="taskForm"
+        [projects]="projects()"
+        [users]="users()"
+        [priorities]="priorities"
+        [statuses]="statuses"
+        [saving]="savingTask()"
+        [disabled]="projects().length === 0"
+        (formSubmitted)="createTask()"
+      />
+    </aside>
+
+    <app-dashboard-kanban-board
+      [loading]="loading()"
+      [projectsCount]="projects().length"
+      [selectedProject]="selectedProject()"
+      [columns]="kanbanColumns()"
+    />
+  </div>
+</section>

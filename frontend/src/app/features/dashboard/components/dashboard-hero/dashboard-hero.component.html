@@ -1,0 +1,24 @@
+<div class="hero-card">
+  <div>
+    <p class="eyebrow">Pilotage des projets</p>
+    <h1>Un tableau Kanban relie a ton backend REST pour piloter les taches de l'equipe.</h1>
+    <p class="hero-copy">
+      Cree un projet, ajoute des taches, filtre par projet et suis l'avancement par colonnes.
+    </p>
+  </div>
+
+  <div class="hero-stats">
+    <article>
+      <strong>{{ activeProjects() }}</strong>
+      <span>projets</span>
+    </article>
+    <article>
+      <strong>{{ totalTasks() }}</strong>
+      <span>taches visibles</span>
+    </article>
+    <article>
+      <strong>{{ completedTasks() }}</strong>
+      <span>terminees</span>
+    </article>
+  </div>
+</div>

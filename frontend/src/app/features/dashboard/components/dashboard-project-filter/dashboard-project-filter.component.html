@@ -1,0 +1,26 @@
+<section class="panel-card">
+  <div class="panel-head">
+    <h2>Filtres</h2>
+    <button class="ghost-button" type="button" (click)="refreshRequested.emit()">Actualiser</button>
+  </div>
+
+  <div class="project-filter-list">
+    <button
+      type="button"
+      [class.active]="selectedProjectId() === 'all'"
+      (click)="projectSelected.emit('all')"
+    >
+      Tous les projets
+    </button>
+
+    @for (project of projects(); track project.id) {
+      <button
+        type="button"
+        [class.active]="selectedProjectId() === project.id"
+        (click)="projectSelected.emit(project.id)"
+      >
+        {{ projectLabel(project) }}
+      </button>
+    }
+  </div>
+</section>

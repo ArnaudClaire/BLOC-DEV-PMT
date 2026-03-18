@@ -1,0 +1,36 @@
+<div class="app-shell">
+  <header class="app-header">
+    <a class="brand" routerLink="/dashboard">
+      <span class="brand-mark">PMT</span>
+      <span class="brand-copy">
+        <strong>{{ title() }}</strong>
+        <small>Gestion de projet collaborative</small>
+      </span>
+    </a>
+
+    <nav class="app-nav">
+      @if (isAuthenticated()) {
+        <a routerLink="/dashboard" routerLinkActive="is-active">Kanban</a>
+      } @else {
+        <a routerLink="/login" routerLinkActive="is-active">Connexion</a>
+        <a routerLink="/register" routerLinkActive="is-active">Inscription</a>
+      }
+    </nav>
+
+    <div class="app-user">
+      @if (currentUser(); as user) {
+        <div class="user-chip">
+          <span>{{ user.username }}</span>
+          <small>{{ user.email }}</small>
+        </div>
+        <button class="logout-button" type="button" (click)="logout()">Se deconnecter</button>
+      } @else {
+        <span class="guest-copy">Connecte-toi pour acceder au tableau Kanban</span>
+      }
+    </div>
+  </header>
+
+  <main class="app-main">
+    <router-outlet />
+  </main>
+</div>
