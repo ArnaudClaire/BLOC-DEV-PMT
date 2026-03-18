@@ -16,6 +16,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register-page.component').then((m) => m.RegisterPageComponent),
   },
   {
+    path: 'invitation/:token',
+    loadComponent: () => import('./features/invitations/invitation-accept-page.component').then((m) => m.InvitationAcceptPageComponent),
+  },
+  {
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () => import('./features/dashboard/dashboard-page.component').then((m) => m.DashboardPageComponent),

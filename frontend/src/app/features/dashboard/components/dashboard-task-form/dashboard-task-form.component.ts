@@ -21,4 +21,30 @@ export class DashboardTaskFormComponent {
   readonly disabled = input.required<boolean>();
 
   readonly formSubmitted = output<void>();
+
+  priorityLabel(priority: TaskPriority | string): string {
+    switch (priority) {
+      case 'HIGH':
+        return 'Haute';
+      case 'MEDIUM':
+        return 'Moyenne';
+      case 'LOW':
+        return 'Basse';
+      default:
+        return priority;
+    }
+  }
+
+  statusLabel(status: TaskStatus | string): string {
+    switch (status) {
+      case 'TODO':
+        return 'A faire';
+      case 'IN_PROGRESS':
+        return 'En cours';
+      case 'DONE':
+        return 'Terminee';
+      default:
+        return status;
+    }
+  }
 }

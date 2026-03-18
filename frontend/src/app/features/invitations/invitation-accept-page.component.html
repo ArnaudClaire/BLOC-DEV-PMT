@@ -1,0 +1,76 @@
+<section class="mx-auto grid min-h-[80vh] max-w-5xl items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+  <div class="rounded-[2rem] border border-white/60 bg-white/85 p-8 shadow-soft backdrop-blur">
+    <p class="text-xs font-semibold uppercase tracking-[0.35em] text-ember">Invitation</p>
+    <h1 class="mt-3 font-display text-4xl text-ink">Rejoins ton projet en quelques secondes.</h1>
+    <p class="mt-4 text-base leading-7 text-slate-600">
+      Connecte-toi ou crée ton compte avec l'adresse invitée pour rejoindre automatiquement le projet.
+    </p>
+
+    @if (loading()) {
+      <p class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        Chargement de l'invitation...
+      </p>
+    } @else if (errorMessage()) {
+      <p class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {{ errorMessage() }}
+      </p>
+    } @else if (invitation()) {
+      <div class="mt-6 grid gap-4">
+        <article class="rounded-3xl bg-slate-50 p-5">
+          <p class="text-sm text-slate-500">Projet</p>
+          <p class="mt-2 text-lg font-semibold text-ink">{{ invitation()?.projectName }}</p>
+        </article>
+        <article class="rounded-3xl bg-orange-50 p-5">
+          <p class="text-sm text-slate-500">Adresse invitée</p>
+          <p class="mt-2 text-lg font-semibold text-ink">{{ invitation()?.email }}</p>
+        </article>
+        <article class="rounded-3xl bg-teal-50 p-5">
+          <p class="text-sm text-slate-500">Rôle attribué</p>
+          <p class="mt-2 text-lg font-semibold text-ink">{{ roleLabel(invitation()?.role) }}</p>
+        </article>
+      </div>
+    }
+  </div>
+
+  <div class="rounded-[2rem] border border-white/60 bg-white p-8 shadow-soft">
+    <h2 class="text-2xl font-semibold text-ink">Accepter l'invitation</h2>
+
+    @if (loading()) {
+      <p class="mt-4 text-sm text-slate-500">Préparation de ton accès...</p>
+    } @else if (invitation()) {
+      <p class="mt-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        {{ statusLabel(invitation()?.status) }}
+      </p>
+
+      @if (!isAuthenticated()) {
+        <div class="mt-6 grid gap-3">
+          <a class="rounded-full bg-ember px-5 py-3 text-center font-semibold text-white" routerLink="/login" [queryParams]="loginQueryParams()">
+            Se connecter avec {{ invitation()?.email }}
+          </a>
+          <a class="rounded-full border border-slate-200 px-5 py-3 text-center font-semibold text-ink" routerLink="/register" [queryParams]="registerQueryParams()">
+            Créer un compte avec {{ invitation()?.email }}
+          </a>
+        </div>
+      } @else if (!canAcceptInvitation()) {
+        <div class="mt-6 grid gap-3">
+          <p class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Cette invitation est liée à <strong>{{ invitation()?.email }}</strong>. Le compte actuellement connecté est
+            <strong>{{ currentUser()?.email }}</strong>.
+          </p>
+          <button class="rounded-full border border-slate-200 px-5 py-3 font-semibold text-ink" type="button" (click)="switchAccount()">
+            Me reconnecter avec la bonne adresse
+          </button>
+        </div>
+      } @else {
+        <div class="mt-6 grid gap-3">
+          <p class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            Tu es connecté avec la bonne adresse. Tu peux maintenant rejoindre le projet.
+          </p>
+          <button class="rounded-full bg-ink px-5 py-3 font-semibold text-white disabled:opacity-60" type="button" [disabled]="accepting()" (click)="acceptInvitation()">
+            {{ accepting() ? "Ajout au projet..." : "Rejoindre le projet" }}
+          </button>
+        </div>
+      }
+    }
+  </div>
+</section>

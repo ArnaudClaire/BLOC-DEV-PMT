@@ -22,8 +22,7 @@ public class Task extends BaseEntity {
     private String title;
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    private TaskStatus status;
+    private String status;
 
     @Enumerated(EnumType.STRING)
     private TaskPriority priority;
@@ -32,7 +31,7 @@ public class Task extends BaseEntity {
     private LocalDate endDate;
 
     @ManyToOne
-    @JsonIgnoreProperties({"tasks", "members", "invitations"})
+    @JsonIgnoreProperties({"tasks", "members", "invitations", "boardColumns"})
     private Project project;
 
     @ManyToOne
@@ -73,11 +72,11 @@ public class Task extends BaseEntity {
         this.description = description;
     }
 
-    public TaskStatus getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(TaskStatus status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
@@ -158,7 +157,7 @@ public class Task extends BaseEntity {
     public void updateTask(
             String title,
             String description,
-            TaskStatus status,
+            String status,
             TaskPriority priority,
             LocalDate dueDate,
             LocalDate endDate

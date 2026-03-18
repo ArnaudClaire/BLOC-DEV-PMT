@@ -22,7 +22,7 @@ public class ProjectMember extends BaseEntity {
     private Timestamp joinedAt;
 
     @ManyToOne
-    @JsonIgnoreProperties({"members", "invitations", "tasks"})
+    @JsonIgnoreProperties({"members", "invitations", "tasks", "boardColumns"})
     private Project project;
 
     @ManyToOne

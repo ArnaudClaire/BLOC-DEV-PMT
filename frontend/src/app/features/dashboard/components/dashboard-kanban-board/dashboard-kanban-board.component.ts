@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 
 import { Project } from '../../../../core/models/api.models';
 import { KanbanColumn } from '../../models/dashboard.models';
@@ -16,8 +16,24 @@ export class DashboardKanbanBoardComponent {
   readonly projectsCount = input.required<number>();
   readonly selectedProject = input<Project | null>();
   readonly columns = input.required<KanbanColumn[]>();
+  readonly detailsEnabled = input(false);
+
+  readonly taskSelected = output<number>();
 
   trackByColumn(_: number, column: KanbanColumn): string {
     return column.key;
+  }
+
+  priorityLabel(priority: string): string {
+    switch (priority) {
+      case 'HIGH':
+        return 'Haute';
+      case 'MEDIUM':
+        return 'Moyenne';
+      case 'LOW':
+        return 'Basse';
+      default:
+        return priority;
+    }
   }
 }

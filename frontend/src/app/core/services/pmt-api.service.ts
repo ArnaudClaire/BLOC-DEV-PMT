@@ -3,16 +3,24 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import {
+  CreateProjectInvitationPayload,
+  CreateNotificationPayload,
   CreateProjectPayload,
   CreateProjectMemberPayload,
+  CreateTaskHistoryPayload,
   CreateTaskPayload,
   CreateUserPayload,
   Notification,
   Project,
+  ProjectInvitationAcceptPayload,
+  ProjectInvitationAcceptResponse,
+  ProjectInvitationActionPayload,
+  ProjectInvitationPublicDetails,
   ProjectInvitation,
   ProjectMember,
   Task,
   TaskHistory,
+  UpdateTaskPayload,
   User,
 } from '../models/api.models';
 
@@ -71,6 +79,10 @@ export class PmtApiService {
     return this.create<number>('tasks', payload);
   }
 
+  updateTask(id: number, payload: UpdateTaskPayload): Observable<void> {
+    return this.put<void>('tasks', id, payload);
+  }
+
   deleteTask(id: number): Observable<void> {
     return this.delete('tasks', id);
   }
@@ -99,8 +111,30 @@ export class PmtApiService {
     return this.getById<unknown>('project-invitations', id).pipe(map((invitation) => this.mapProjectInvitation(invitation)));
   }
 
-  createProjectInvitation(payload: Record<string, unknown>): Observable<number> {
+  listProjectInvitationsForProject(projectId: number): Observable<ProjectInvitation[]> {
+    return this.http.get<unknown[]>(`${this.apiBaseUrl}/projects/${projectId}/project-invitations`)
+      .pipe(map((invitations) => invitations.map((invitation) => this.mapProjectInvitation(invitation))));
+  }
+
+  getProjectInvitationByToken(token: string): Observable<ProjectInvitationPublicDetails> {
+    return this.http.get<unknown>(`${this.apiBaseUrl}/project-invitations/token/${token}`)
+      .pipe(map((invitation) => this.mapProjectInvitationPublic(invitation)));
+  }
+
+  createProjectInvitation(payload: CreateProjectInvitationPayload): Observable<number> {
     return this.create<number>('project-invitations', payload);
+  }
+
+  acceptProjectInvitation(token: string, payload: ProjectInvitationAcceptPayload): Observable<ProjectInvitationAcceptResponse> {
+    return this.http.post<ProjectInvitationAcceptResponse>(`${this.apiBaseUrl}/project-invitations/token/${token}/accept`, payload);
+  }
+
+  cancelProjectInvitation(id: number, payload: ProjectInvitationActionPayload): Observable<void> {
+    return this.http.post<void>(`${this.apiBaseUrl}/project-invitations/${id}/cancel`, payload);
+  }
+
+  resendProjectInvitation(id: number, payload: ProjectInvitationActionPayload): Observable<void> {
+    return this.http.post<void>(`${this.apiBaseUrl}/project-invitations/${id}/resend`, payload);
   }
 
   deleteProjectInvitation(id: number): Observable<void> {
@@ -115,7 +149,7 @@ export class PmtApiService {
     return this.getById<unknown>('notifications', id).pipe(map((notification) => this.mapNotification(notification)));
   }
 
-  createNotification(payload: Record<string, unknown>): Observable<number> {
+  createNotification(payload: CreateNotificationPayload): Observable<number> {
     return this.create<number>('notifications', payload);
   }
 
@@ -131,7 +165,7 @@ export class PmtApiService {
     return this.getById<unknown>('task-histories', id).pipe(map((history) => this.mapTaskHistory(history)));
   }
 
-  createTaskHistory(payload: Record<string, unknown>): Observable<number> {
+  createTaskHistory(payload: CreateTaskHistoryPayload): Observable<number> {
     return this.create<number>('task-histories', payload);
   }
 
@@ -149,6 +183,10 @@ export class PmtApiService {
 
   create<TResponse>(path: string, payload: unknown): Observable<TResponse> {
     return this.http.post<TResponse>(this.buildUrl(path), payload);
+  }
+
+  put<TResponse>(path: string, id: number, payload: unknown): Observable<TResponse> {
+    return this.http.put<TResponse>(this.buildUrl(path, id), payload);
   }
 
   delete(path: string, id: number): Observable<void> {
@@ -243,9 +281,40 @@ export class PmtApiService {
     const value = payload as {
       id: number;
       email: string;
+      token?: string;
       role?: string;
       status?: string;
+      createdAt?: string;
+      expiresAt?: string;
+      acceptedAt?: string;
       project?: { id?: number };
+      invitedBy?: { id?: number };
+      acceptedBy?: { id?: number };
+    };
+
+    return {
+      id: value.id,
+      email: value.email,
+      token: value.token,
+      role: value.role,
+      status: value.status,
+      createdAt: value.createdAt,
+      expiresAt: value.expiresAt,
+      acceptedAt: value.acceptedAt,
+      invitedById: value.invitedBy?.id,
+      projectId: value.project?.id,
+    };
+  }
+
+  private mapProjectInvitationPublic(payload: unknown): ProjectInvitationPublicDetails {
+    const value = payload as {
+      id: number;
+      email: string;
+      role?: string;
+      status?: string;
+      projectId: number;
+      projectName: string;
+      expiresAt?: string;
     };
 
     return {
@@ -253,7 +322,9 @@ export class PmtApiService {
       email: value.email,
       role: value.role,
       status: value.status,
-      projectId: value.project?.id,
+      projectId: value.projectId,
+      projectName: value.projectName,
+      expiresAt: value.expiresAt,
     };
   }
 
@@ -263,6 +334,7 @@ export class PmtApiService {
       type?: string;
       status?: string;
       message?: string;
+      sentAt?: string;
       createdAt?: string;
       user?: { id?: number };
       task?: { id?: number };
@@ -273,7 +345,7 @@ export class PmtApiService {
       type: value.type,
       status: value.status,
       message: value.message,
-      createdAt: value.createdAt,
+      createdAt: value.sentAt ?? value.createdAt,
       userId: value.user?.id,
       taskId: value.task?.id,
     };
@@ -283,6 +355,9 @@ export class PmtApiService {
     const value = payload as {
       id: number;
       actionType?: string;
+      fieldName?: string;
+      oldValue?: string | null;
+      newValue?: string | null;
       createdAt?: string;
       task?: { id?: number };
       changedBy?: { id?: number };
@@ -291,6 +366,9 @@ export class PmtApiService {
     return {
       id: value.id,
       actionType: value.actionType,
+      fieldName: value.fieldName,
+      oldValue: value.oldValue,
+      newValue: value.newValue,
       createdAt: value.createdAt,
       taskId: value.task?.id,
       changedById: value.changedBy?.id,

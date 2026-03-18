@@ -62,7 +62,7 @@ class TaskControllerIntegrationTest {
         com.mooc.formulaone.models.Task task = new com.mooc.formulaone.models.Task();
         task.setTitle("Create API");
         task.setDescription("Implement PMT backend");
-        task.setStatus(com.mooc.formulaone.models.TaskStatus.TODO);
+        task.setStatus("TODO");
         task.setPriority(com.mooc.formulaone.models.TaskPriority.HIGH);
         task.setProject(projectService.findById(projectId));
         task.setCreatedBy(userService.findById(creatorId));

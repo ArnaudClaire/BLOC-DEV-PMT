@@ -1,7 +1,13 @@
 .env
+.env.local
 backend/target/
 frontend/node_modules/
 frontend/dist/
 frontend/.angular/
 frontend/.nx/
 database/*.mv.db
+.codex-tmp/
+.metals/
+.vscode/extensions.json
+.vscode/launch.json
+*.class

@@ -3,8 +3,8 @@
     <div class="loading-state">Chargement du Kanban...</div>
   } @else if (projectsCount() === 0) {
     <div class="empty-state">
-      <h2>Commence par creer un projet</h2>
-      <p>Le backend ne retourne encore aucun projet. Cree ton premier projet dans le panneau de gauche.</p>
+      <h2>Commence par créer un projet</h2>
+      <p>Le backend ne retourne encore aucun projet. Crée ton premier projet dans le panneau de gauche.</p>
     </div>
   } @else {
     <div class="board-header">
@@ -12,7 +12,7 @@
         <h2>{{ selectedProject()?.name || 'Tous les projets' }}</h2>
         <p>
           @if (selectedProject()) {
-            {{ selectedProject()?.description || 'Vue du projet selectionne.' }}
+            {{ selectedProject()?.description || 'Vue du projet sélectionné.' }}
           } @else {
             Vue transverse de tous les projets.
           }
@@ -26,18 +26,22 @@
           <header>
             <div>
               <h3>{{ column.label }}</h3>
-              <span>{{ column.tasks.length }} tache(s)</span>
+              <span>{{ column.tasks.length }} tâche(s)</span>
             </div>
           </header>
 
           <div class="kanban-stack">
             @if (column.tasks.length === 0) {
-              <p class="empty-column">Aucune tache dans cette colonne.</p>
+              <p class="empty-column">Aucune tâche dans cette colonne.</p>
             } @else {
               @for (task of column.tasks; track task.id) {
-                <article class="task-card">
+                <article
+                  class="task-card"
+                  [class.interactive]="detailsEnabled()"
+                  (click)="detailsEnabled() && taskSelected.emit(task.id)"
+                >
                   <div class="task-topline">
-                    <span class="priority-pill" [attr.data-priority]="task.priority">{{ task.priority }}</span>
+                    <span class="priority-pill" [attr.data-priority]="task.priority">{{ priorityLabel(task.priority) }}</span>
                     <span class="project-pill">{{ task.projectName }}</span>
                   </div>
 
@@ -46,14 +50,18 @@
 
                   <dl class="task-meta">
                     <div>
-                      <dt>Assigne</dt>
+                      <dt>Assigné</dt>
                       <dd>{{ task.assigneeName }}</dd>
                     </div>
                     <div>
-                      <dt>Echeance</dt>
+                      <dt>Échéance</dt>
                       <dd>{{ task.dueDateLabel }}</dd>
                     </div>
                   </dl>
+
+                  @if (detailsEnabled()) {
+                    <div class="task-footer-link">Ouvrir le détail</div>
+                  }
                 </article>
               }
             }

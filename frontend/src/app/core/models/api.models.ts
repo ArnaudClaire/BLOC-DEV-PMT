@@ -1,6 +1,9 @@
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 export type MemberRole = 'ADMIN' | 'MEMBER' | 'OBSERVER';
+export type NotificationType = 'TASK_ASSIGNED' | 'INVITATION_SENT';
+export type NotificationStatus = 'SENT' | 'READ';
+export type TaskHistoryAction = 'CREATED' | 'UPDATED' | 'ASSIGNED' | 'STATUS_CHANGED' | 'COMPLETED';
 
 export interface User {
   id: number;
@@ -55,6 +58,16 @@ export interface CreateTaskPayload {
   assignedToId: number;
 }
 
+export interface UpdateTaskPayload {
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate: string;
+  endDate: string;
+  assignedToId?: number;
+}
+
 export interface ProjectMember {
   id: number;
   role: MemberRole | string;
@@ -76,22 +89,78 @@ export interface ProjectInvitation {
   role?: string;
   projectId?: number;
   status?: string;
+  token?: string;
+  createdAt?: string;
+  expiresAt?: string;
+  acceptedAt?: string;
+  invitedById?: number;
+  projectName?: string;
+}
+
+export interface CreateProjectInvitationPayload {
+  email: string;
+  role: MemberRole;
+  projectId: number;
+  invitedById: number;
+}
+
+export interface ProjectInvitationActionPayload {
+  requestedById: number;
+}
+
+export interface ProjectInvitationPublicDetails {
+  id: number;
+  email: string;
+  role?: string;
+  status?: string;
+  projectId: number;
+  projectName: string;
+  expiresAt?: string;
+}
+
+export interface ProjectInvitationAcceptPayload {
+  userId: number;
+}
+
+export interface ProjectInvitationAcceptResponse {
+  projectId: number;
 }
 
 export interface Notification {
   id: number;
-  type?: string;
+  type?: NotificationType | string;
   message?: string;
-  status?: string;
+  status?: NotificationStatus | string;
   userId?: number;
   taskId?: number;
   createdAt?: string;
 }
 
+export interface CreateNotificationPayload {
+  type: NotificationType;
+  status: NotificationStatus;
+  message: string;
+  sentAt: string;
+  userId: number;
+  taskId?: number;
+}
+
 export interface TaskHistory {
   id: number;
-  actionType?: string;
+  actionType?: TaskHistoryAction | string;
+  fieldName?: string;
+  oldValue?: string | null;
+  newValue?: string | null;
   taskId?: number;
   changedById?: number;
   createdAt?: string;
+}
+
+export interface CreateTaskHistoryPayload {
+  actionType: TaskHistoryAction;
+  fieldName: string;
+  oldValue?: string | null;
+  newValue?: string | null;
+  taskId: number;
+  changedById: number;
 }

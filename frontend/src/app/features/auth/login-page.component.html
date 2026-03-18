@@ -1,10 +1,10 @@
 <section class="mx-auto grid min-h-[80vh] max-w-6xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
   <div class="rounded-[2rem] border border-white/60 bg-white/80 p-8 shadow-soft backdrop-blur">
     <p class="text-xs font-semibold uppercase tracking-[0.35em] text-ember">Connexion</p>
-    <h1 class="mt-3 font-display text-5xl leading-tight text-ink">Organise tes projets, ton equipe et tes sprints.</h1>
+    <h1 class="mt-3 font-display text-5xl leading-tight text-ink">Organise tes projets, ton équipe et tes sprints.</h1>
         <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-          Le backend ne fournit pas encore de route d'authentification. Cette page utilise donc une connexion de demonstration :
-          l'email est verifie sur `/users`, puis la session est conservee cote front.
+          Le backend ne fournit pas encore de route d'authentification. Cette page utilise donc une connexion de démonstration :
+          l'email est vérifié sur `/users`, puis la session est conservée côté front.
         </p>
 
         @if (backendStatus()) {
@@ -16,11 +16,11 @@
     <div class="mt-8 grid gap-4 sm:grid-cols-3">
       <article class="rounded-3xl bg-slate-950 p-5 text-white">
         <p class="text-sm text-white/70">Projet</p>
-        <p class="mt-2 text-lg font-semibold">Creation et pilotage</p>
+        <p class="mt-2 text-lg font-semibold">Création et pilotage</p>
       </article>
       <article class="rounded-3xl bg-lagoon p-5 text-white">
         <p class="text-sm text-white/70">Collaboration</p>
-        <p class="mt-2 text-lg font-semibold">Invitations et roles</p>
+        <p class="mt-2 text-lg font-semibold">Invitations et rôles</p>
       </article>
       <article class="rounded-3xl bg-sand p-5 text-ink">
         <p class="text-sm text-slate-500">Suivi</p>
@@ -33,9 +33,16 @@
     <h2 class="text-2xl font-semibold text-ink">Se connecter</h2>
     <p class="mt-2 text-sm leading-6 text-slate-500">Entre ton email et ton mot de passe pour ouvrir ton espace MPMT.</p>
 
+    @if (invitationToken()) {
+      <p class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        Cette connexion est liée à une invitation pour le projet <strong>{{ invitationProjectName() || 'concerné' }}</strong>.
+        Utilise l'adresse email invitée pour rejoindre automatiquement le projet après connexion.
+      </p>
+    }
+
     <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="submit()">
       <div>
-        <input class="w-full rounded-2xl border border-slate-200 px-4 py-3" formControlName="email" placeholder="email@exemple.com" type="email" />
+        <input class="w-full rounded-2xl border border-slate-200 px-4 py-3" formControlName="email" placeholder="email@exemple.com" type="email" [readOnly]="!!invitationToken()" />
         @if (hasFieldError('email')) {
           <p class="mt-2 text-sm text-red-700">Saisis une adresse email valide.</p>
         }
@@ -44,7 +51,7 @@
       <div>
         <input class="w-full rounded-2xl border border-slate-200 px-4 py-3" formControlName="password" placeholder="Mot de passe" type="password" />
         @if (hasFieldError('password')) {
-          <p class="mt-2 text-sm text-red-700">Le mot de passe doit contenir au moins 6 caracteres.</p>
+          <p class="mt-2 text-sm text-red-700">Le mot de passe doit contenir au moins 6 caractères.</p>
         }
       </div>
 
@@ -53,13 +60,13 @@
       }
 
       <button class="w-full rounded-full bg-ember px-5 py-3 font-semibold text-white" type="submit">
-        Acceder a la plateforme
+        Accéder à la plateforme
       </button>
     </form>
 
     <p class="mt-6 text-sm text-slate-500">
       Pas encore de compte ?
-      <a class="font-semibold text-ember" routerLink="/register">Creer un compte</a>
+      <a class="font-semibold text-ember" routerLink="/register" [queryParams]="invitationQueryParams()">Créer un compte</a>
     </p>
   </div>
 </section>

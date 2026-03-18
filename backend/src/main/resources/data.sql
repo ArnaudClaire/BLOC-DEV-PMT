@@ -1,35 +1,35 @@
 UPDATE users
-SET username = 'alice.admin',
+SET username = 'a.admin',
     password_hash = '$2a$10$n12lXryy9uKNIyxGuW7m4OZbbtwpReq.uURHfrZBJ.58WAWsliX8e',
     updated_at = CURRENT_TIMESTAMP
 WHERE email = 'alice.admin@pmt.local';
 
 UPDATE users
-SET username = 'bob.member',
+SET username = 'b.member',
     password_hash = '$2a$10$n12lXryy9uKNIyxGuW7m4OZbbtwpReq.uURHfrZBJ.58WAWsliX8e',
     updated_at = CURRENT_TIMESTAMP
 WHERE email = 'bob.member@pmt.local';
 
 UPDATE users
-SET username = 'claire.observer',
+SET username = 'c.observer',
     password_hash = '$2a$10$n12lXryy9uKNIyxGuW7m4OZbbtwpReq.uURHfrZBJ.58WAWsliX8e',
     updated_at = CURRENT_TIMESTAMP
 WHERE email = 'claire.observer@pmt.local';
 
 INSERT INTO users (username, email, password_hash, created_at, updated_at)
-SELECT 'alice.admin', 'alice.admin@pmt.local', '$2a$10$n12lXryy9uKNIyxGuW7m4OZbbtwpReq.uURHfrZBJ.58WAWsliX8e', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+SELECT 'a.admin', 'alice.admin@pmt.local', '$2a$10$n12lXryy9uKNIyxGuW7m4OZbbtwpReq.uURHfrZBJ.58WAWsliX8e', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (
     SELECT 1 FROM users WHERE email = 'alice.admin@pmt.local'
 );
 
 INSERT INTO users (username, email, password_hash, created_at, updated_at)
-SELECT 'bob.member', 'bob.member@pmt.local', '$2a$10$n12lXryy9uKNIyxGuW7m4OZbbtwpReq.uURHfrZBJ.58WAWsliX8e', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+SELECT 'b.member', 'bob.member@pmt.local', '$2a$10$n12lXryy9uKNIyxGuW7m4OZbbtwpReq.uURHfrZBJ.58WAWsliX8e', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (
     SELECT 1 FROM users WHERE email = 'bob.member@pmt.local'
 );
 
 INSERT INTO users (username, email, password_hash, created_at, updated_at)
-SELECT 'claire.observer', 'claire.observer@pmt.local', '$2a$10$n12lXryy9uKNIyxGuW7m4OZbbtwpReq.uURHfrZBJ.58WAWsliX8e', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+SELECT 'c.observer', 'claire.observer@pmt.local', '$2a$10$n12lXryy9uKNIyxGuW7m4OZbbtwpReq.uURHfrZBJ.58WAWsliX8e', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 WHERE NOT EXISTS (
     SELECT 1 FROM users WHERE email = 'claire.observer@pmt.local'
 );

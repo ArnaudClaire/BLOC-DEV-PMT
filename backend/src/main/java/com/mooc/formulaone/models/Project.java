@@ -40,6 +40,10 @@ public class Project extends BaseEntity {
     @JsonIgnoreProperties("project")
     private Set<Task> tasks = new HashSet<>();
 
+    @OneToMany(mappedBy = "project")
+    @JsonIgnoreProperties("project")
+    private Set<TaskBoardColumn> boardColumns = new HashSet<>();
+
     public String getName() {
         return name;
     }
@@ -94,6 +98,14 @@ public class Project extends BaseEntity {
 
     public void setTasks(Set<Task> tasks) {
         this.tasks = tasks;
+    }
+
+    public Set<TaskBoardColumn> getBoardColumns() {
+        return boardColumns;
+    }
+
+    public void setBoardColumns(Set<TaskBoardColumn> boardColumns) {
+        this.boardColumns = boardColumns;
     }
 
 }

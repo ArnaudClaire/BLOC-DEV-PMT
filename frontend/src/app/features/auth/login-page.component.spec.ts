@@ -5,12 +5,14 @@ import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
+import { PmtApiService } from '../../core/services/pmt-api.service';
 import { LoginPageComponent } from './login-page.component';
 
 describe('LoginPageComponent', () => {
   let fixture: ComponentFixture<LoginPageComponent>;
   let component: LoginPageComponent;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
+  let apiSpy: jasmine.SpyObj<PmtApiService>;
   let routerSpy: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
@@ -18,12 +20,23 @@ describe('LoginPageComponent', () => {
       currentUser: signal(null),
       isAuthenticated: signal(false),
     } as never);
+    apiSpy = jasmine.createSpyObj<PmtApiService>('PmtApiService', ['getProjectInvitationByToken']);
+    apiSpy.getProjectInvitationByToken.and.returnValue(of({
+      id: 1,
+      email: 'alice@example.com',
+      role: 'MEMBER',
+      status: 'PENDING',
+      projectId: 1,
+      projectName: 'PMT Launch',
+      expiresAt: '2026-03-25T09:00:00.000Z',
+    }));
 
     await TestBed.configureTestingModule({
       imports: [LoginPageComponent],
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: authServiceSpy },
+        { provide: PmtApiService, useValue: apiSpy },
       ],
     }).compileComponents();
 

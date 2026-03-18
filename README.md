@@ -236,7 +236,29 @@ POSTGRES_PASSWORD=admin
 SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/pmtdb
 SPRING_DATASOURCE_USERNAME=admin
 SPRING_DATASOURCE_PASSWORD=admin
+APP_FRONTEND_BASE_URL=http://localhost:4200
+APP_MAIL_FROM=no-reply@pmt.local
+SPRING_MAIL_HOST=
+SPRING_MAIL_PORT=587
+SPRING_MAIL_USERNAME=
+SPRING_MAIL_PASSWORD=
+SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
 ```
+
+Pour activer un vrai envoi d'email pour les invitations, il faut renseigner la configuration SMTP.
+
+Exemple avec Mailtrap :
+
+```env
+SPRING_MAIL_HOST=sandbox.smtp.mailtrap.io
+SPRING_MAIL_PORT=2525
+SPRING_MAIL_USERNAME=ton_username_mailtrap
+SPRING_MAIL_PASSWORD=ton_password_mailtrap
+APP_MAIL_FROM=no-reply@pmt.local
+```
+
+Si `SPRING_MAIL_HOST` reste vide, le backend n'envoie pas de vrai mail et journalise simplement le lien d'invitation dans la console.
 
 ### Installation des dependances
 
@@ -267,6 +289,7 @@ Important :
 - `.\mvnw.cmd test` ne demarre pas le backend Docker
 - `.\mvnw.cmd test` n'a pas besoin que `docker compose` tourne
 - les tests backend utilisent une base H2 en memoire dans `backend/src/test/resources/`
+- apres avoir arrete `.\start-dev.ps1`, tu peux relancer `.\mvnw.cmd test` dans le meme terminal sans ecraser la datasource du profil `test`
 
 ## Demarrage Du Projet
 
@@ -275,15 +298,18 @@ Important :
 Depuis la racine :
 
 ```powershell
-.\start-dev.ps1
+powershell -ExecutionPolicy Bypass -File .\start-dev.ps1
 ```
 
 Ce script :
 
 - charge les variables du fichier `.env`
+- adapte `SPRING_DATASOURCE_URL` vers `localhost:5433` quand le backend tourne en local
+- demarre le service `postgres` de `docker compose` si necessaire
 - verifie que Node 20.19.0 LTS minimum est actif
 - lance le frontend dans une nouvelle fenetre PowerShell
 - lance le backend dans le terminal courant
+- restaure les variables d'environnement de la session quand le backend s'arrete
 
 Application disponible sur :
 
@@ -305,6 +331,11 @@ Frontend :
 Set-Location .\frontend
 npm start
 ```
+
+Important :
+
+- cette option ne charge pas automatiquement le fichier `.env` a la racine
+- si tu veux tester les invitations email avec SMTP en demarrage separe, il faut soit passer par `.\start-dev.ps1`, soit exporter les variables d'environnement manuellement avant de lancer Spring Boot
 
 ## Comptes De Demo
 
@@ -374,5 +405,7 @@ Les principaux contrats frontend/backend ont ete alignes :
 - la creation de projet envoie bien `ownerId`
 - le frontend reutilise les memes enums de base que le backend pour les statuts et priorites exposes
 - le service API frontend normalise les objets lies du backend en champs exploitables par l'interface comme `projectId`, `assignedToId` et `createdById`
+- les invitations de projet peuvent maintenant passer par email avec un lien `/invitation/:token`
+- le mail part vraiment seulement si SMTP est configure dans `.env`
 
 Il reste encore possible d'ameliorer le projet sur des aspects produit ou UX, mais la base de communication entre front et back est maintenant coherente.

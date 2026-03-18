@@ -103,8 +103,8 @@ class ServicesIntegrationTest {
         ProjectInvitation invitation = new ProjectInvitation();
         invitation.setEmail("invitee@test.local");
         invitation.setRole(ProjectRole.OBSERVER);
-        invitation.setStatus(InvitationStatus.ACCEPTED);
         invitation.setProject(projectService.findById(projectId));
+        invitation.setInvitedBy(userService.findById(ownerId));
         Long invitationId = projectInvitationService.create(invitation);
 
         assertThat(projectInvitationService.findAll())
@@ -127,7 +127,7 @@ class ServicesIntegrationTest {
         Task task = new Task();
         task.setTitle("Cover code");
         task.setDescription("Exercise services");
-        task.setStatus(TaskStatus.IN_PROGRESS);
+        task.setStatus("IN_PROGRESS");
         task.setPriority(TaskPriority.HIGH);
         task.setDueDate(LocalDate.of(2026, 4, 10));
         task.setEndDate(LocalDate.of(2026, 4, 15));
@@ -139,7 +139,7 @@ class ServicesIntegrationTest {
         assertThat(taskService.findAll())
                 .extracting(Task::getTitle)
                 .contains("Cover code");
-        assertThat(taskService.findById(taskId).getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
+        assertThat(taskService.findById(taskId).getStatus()).isEqualTo("IN_PROGRESS");
 
         TaskHistory taskHistory = new TaskHistory();
         taskHistory.setActionType(TaskHistoryAction.ASSIGNED);

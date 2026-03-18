@@ -18,29 +18,338 @@
         (refreshRequested)="loadData()"
       />
 
-      <app-dashboard-project-form
-        [form]="projectForm"
-        [saving]="savingProject()"
-        (formSubmitted)="createProject()"
-      />
+      <section class="panel-card role-card">
+        <div class="panel-head">
+          <h2>Droits actifs</h2>
+          <span class="role-pill" [attr.data-role]="currentProjectRole() ?? 'OBSERVER'">
+            {{ currentProjectRole() ? roleLabel(currentProjectRole()) : 'Selectionner un projet' }}
+          </span>
+        </div>
 
-      <app-dashboard-task-form
-        [form]="taskForm"
-        [projects]="projects()"
-        [users]="users()"
-        [priorities]="priorities"
-        [statuses]="statuses"
-        [saving]="savingTask()"
-        [disabled]="projects().length === 0"
-        (formSubmitted)="createTask()"
-      />
+        @if (selectedProject()) {
+          <p class="role-intro">
+            Projet courant: <strong>{{ selectedProject()?.name }}</strong>
+          </p>
+        } @else {
+          <p class="role-intro">
+            Sélectionne un projet pour voir exactement ce que le rôle courant autorise.
+          </p>
+        }
+
+        <ul class="capability-list">
+          @for (capability of roleCapabilities(); track capability) {
+            <li>{{ capability }}</li>
+          }
+        </ul>
+      </section>
+
+      @if (canCreateProjects()) {
+        <app-dashboard-project-form
+          [form]="projectForm"
+          [saving]="savingProject()"
+          (formSubmitted)="createProject()"
+        />
+      }
+
+      @if (canManageMembers() && selectedProject()) {
+        <section class="panel-card">
+          <div class="panel-head">
+            <h2>Inviter au projet</h2>
+            <span class="subtle">{{ roleLabel('ADMIN') }}</span>
+          </div>
+
+          <form class="stack-form" [formGroup]="invitationForm" (ngSubmit)="createProjectInvitation()">
+            <label>
+              <span>Adresse email</span>
+              <input formControlName="email" type="email" placeholder="membre@exemple.com" />
+            </label>
+            @if (invitationForm.controls.email.invalid && invitationForm.controls.email.touched) {
+              <p class="message error">Entre une adresse email valide pour envoyer l'invitation.</p>
+            }
+
+            <label>
+              <span>Rôle attribué à l'arrivée</span>
+              <select formControlName="role">
+                @for (role of memberRoles; track role) {
+                  <option [value]="role">{{ roleLabel(role) }}</option>
+                }
+              </select>
+            </label>
+
+            <button class="primary-button" type="submit" [disabled]="savingInvitation()">
+              {{ savingInvitation() ? 'Envoi...' : "Envoyer l'invitation" }}
+            </button>
+          </form>
+
+          <div class="member-list">
+            @if (currentProjectInvitations().length === 0) {
+              <p class="empty-panel">Aucune invitation envoyée pour ce projet.</p>
+            } @else {
+              @for (invitation of currentProjectInvitations(); track invitation.id) {
+                <article class="member-row invitation-row">
+                  <div>
+                    <strong>{{ invitation.email }}</strong>
+                    <p>{{ roleLabel(invitation.role) }} • Expire le {{ invitation.expiresAtLabel }}</p>
+                    <small>Envoyée par {{ invitation.invitedByName }}</small>
+                  </div>
+                  <div class="invitation-actions">
+                    <span class="role-pill" [attr.data-status]="invitation.status">
+                      {{ invitationStatusLabel(invitation.status) }}
+                    </span>
+                    @if (invitation.status === 'PENDING') {
+                      <button
+                        class="secondary-button"
+                        type="button"
+                        [disabled]="invitationActionId() === invitation.id"
+                        (click)="resendProjectInvitation(invitation.id)"
+                      >
+                        Renvoyer
+                      </button>
+                      <button
+                        class="secondary-button danger"
+                        type="button"
+                        [disabled]="invitationActionId() === invitation.id"
+                        (click)="cancelProjectInvitation(invitation.id)"
+                      >
+                        Annuler
+                      </button>
+                    }
+                  </div>
+                </article>
+              }
+            }
+          </div>
+
+          <div class="panel-head compact">
+            <h2>Membres actuels</h2>
+            <span class="subtle">{{ currentProjectMembers().length }} membre(s)</span>
+          </div>
+
+          <div class="member-list">
+            @for (member of currentProjectMembers(); track member.displayId) {
+              <article class="member-row">
+                <div>
+                  <strong>{{ member.username }}</strong>
+                  <p>{{ member.email }}</p>
+                </div>
+                <span class="role-pill" [attr.data-role]="member.role">
+                  {{ member.isOwner ? 'Proprietaire / administrateur' : roleLabel(member.role) }}
+                </span>
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      @if (manageableProjects().length > 0) {
+        <app-dashboard-task-form
+          [form]="taskForm"
+          [projects]="manageableProjects()"
+          [users]="assignableUsers()"
+          [priorities]="priorities"
+          [statuses]="statuses"
+          [saving]="savingTask()"
+          [disabled]="manageableProjects().length === 0"
+          (formSubmitted)="createTask()"
+        />
+      }
     </aside>
 
-    <app-dashboard-kanban-board
-      [loading]="loading()"
-      [projectsCount]="projects().length"
-      [selectedProject]="selectedProject()"
-      [columns]="kanbanColumns()"
-    />
+    <div class="main-panel">
+      <app-dashboard-kanban-board
+        [loading]="loading()"
+        [projectsCount]="projects().length"
+        [selectedProject]="selectedProject()"
+        [columns]="kanbanColumns()"
+        [detailsEnabled]="canViewTaskDetails()"
+        (taskSelected)="openTaskDetails($event)"
+      />
+
+      <div class="insights-grid">
+        @if (!canViewTaskDetails()) {
+          <section class="panel-card panel-note">
+            <div class="panel-head">
+              <h2>Consultation seule</h2>
+              <span class="subtle">{{ roleLabel('OBSERVER') }}</span>
+            </div>
+            <p class="empty-panel">
+              Ce rôle peut consulter le tableau de bord, les notifications et l’historique, mais pas créer ou modifier des tâches.
+            </p>
+          </section>
+        }
+
+        <section class="panel-card">
+          <div class="panel-head">
+            <h2>Notifications</h2>
+            <span class="subtle">{{ notifications().length }} entrée(s)</span>
+          </div>
+
+          @if (notifications().length === 0) {
+            <p class="empty-panel">Aucune notification pour le contexte courant.</p>
+          } @else {
+            <div class="activity-list">
+              @for (notification of notifications(); track notification.id) {
+                <article class="activity-row">
+                  <div>
+                    <strong>{{ notification.taskTitle }}</strong>
+                    <p>{{ notification.message }}</p>
+                    <small>{{ notification.projectName }}</small>
+                  </div>
+                  <time>{{ notification.createdAtLabel }}</time>
+                </article>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="panel-card">
+          <div class="panel-head">
+            <h2>Historique</h2>
+            <span class="subtle">{{ taskHistories().length }} entrée(s)</span>
+          </div>
+
+          @if (taskHistories().length === 0) {
+            <p class="empty-panel">Aucune modification historisée pour ce périmètre.</p>
+          } @else {
+            <div class="activity-list">
+              @for (history of taskHistories(); track history.id) {
+                <article class="activity-row">
+                  <div>
+                    <strong>{{ history.taskTitle }}</strong>
+                    <p>{{ historyActionLabel(history.actionType) }} - {{ historyFieldLabel(history.fieldName) }}</p>
+                    <small>{{ history.changedByName }} • {{ history.projectName }}</small>
+                  </div>
+                  <time>{{ history.createdAtLabel }}</time>
+                </article>
+              }
+            </div>
+          }
+        </section>
+      </div>
+    </div>
   </div>
+
+  @if (canViewTaskDetails() && selectedTask() && selectedTaskView()) {
+    <div class="task-modal-backdrop" (click)="closeTaskDetails()">
+      <section
+        class="task-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="task-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="task-modal-glow glow-cyan"></div>
+        <div class="task-modal-glow glow-blue"></div>
+
+        <button class="modal-close-button" type="button" aria-label="Fermer le détail" (click)="closeTaskDetails()">
+          ×
+        </button>
+
+        <div class="task-modal-header">
+          <div class="task-modal-copy">
+            <span class="task-modal-kicker">Tâche #{{ selectedTask()?.id }}</span>
+            <h2 id="task-modal-title">{{ selectedTask()?.title }}</h2>
+            <p>
+              {{ selectedTask()?.description || 'Aucune description détaillée pour cette tâche.' }}
+            </p>
+          </div>
+
+          <div class="task-modal-badges">
+            <span class="priority-pill" [attr.data-priority]="selectedTask()?.priority">
+              Priorité {{ priorityLabel(selectedTask()?.priority) }}
+            </span>
+            <span class="status-pill" [attr.data-status]="selectedTask()?.status">
+              {{ statusLabel(selectedTask()?.status) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="task-modal-summary">
+          <article class="summary-card">
+            <span>Projet</span>
+            <strong>{{ selectedTaskView()?.projectName }}</strong>
+          </article>
+          <article class="summary-card">
+            <span>Assignée à</span>
+            <strong>{{ selectedTaskView()?.assigneeName }}</strong>
+          </article>
+          <article class="summary-card">
+            <span>Échéance</span>
+            <strong>{{ selectedTaskView()?.dueDateLabel }}</strong>
+          </article>
+          <article class="summary-card">
+            <span>Fin prévue</span>
+            <strong>{{ selectedTask()?.endDate ? selectedTask()?.endDate?.slice(0, 10) : 'Non définie' }}</strong>
+          </article>
+        </div>
+
+        @if (canEditSelectedTask()) {
+          <form class="stack-form task-modal-form" [formGroup]="taskDetailForm" (ngSubmit)="updateSelectedTask()">
+            <label>
+              <span>Titre</span>
+              <input formControlName="title" type="text" />
+            </label>
+
+            <label>
+              <span>Description</span>
+              <textarea formControlName="description" rows="4"></textarea>
+            </label>
+
+            <div class="two-columns">
+              <label>
+                <span>Priorité</span>
+                <select formControlName="priority">
+                  @for (priority of priorities; track priority) {
+                    <option [value]="priority">{{ priorityLabel(priority) }}</option>
+                  }
+                </select>
+              </label>
+
+              <label>
+                <span>Statut</span>
+                <select formControlName="status">
+                  @for (status of statuses; track status) {
+                    <option [value]="status">{{ statusLabel(status) }}</option>
+                  }
+                </select>
+              </label>
+            </div>
+
+            <div class="two-columns">
+              <label>
+                <span>Échéance</span>
+                <input formControlName="dueDate" type="date" />
+              </label>
+
+              <label>
+                <span>Fin</span>
+                <input formControlName="endDate" type="date" />
+              </label>
+            </div>
+
+            <label>
+              <span>Assigné à</span>
+              <select formControlName="assignedToId">
+                <option [ngValue]="0">Aucun membre</option>
+                @for (member of selectedTaskMembers(); track member.displayId) {
+                  <option [ngValue]="member.userId">{{ member.username }}</option>
+                }
+              </select>
+            </label>
+
+            <div class="task-modal-actions">
+              <button class="ghost-button" type="button" (click)="closeTaskDetails()">Fermer</button>
+              <button class="primary-button dark" type="submit" [disabled]="savingTaskUpdate()">
+                {{ savingTaskUpdate() ? 'Mise à jour...' : 'Mettre à jour la tâche' }}
+              </button>
+            </div>
+          </form>
+        } @else {
+          <p class="empty-panel">
+            Cette tâche est visible, mais votre rôle actuel ne permet pas de la modifier.
+          </p>
+        }
+      </section>
+    </div>
+  }
 </section>

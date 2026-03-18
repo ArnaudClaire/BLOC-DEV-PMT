@@ -1,6 +1,7 @@
 package com.mooc.formulaone.controllers;
 
 import com.mooc.formulaone.controllers.dto.AuthLoginRequest;
+import com.mooc.formulaone.controllers.dto.AuthLoginResponse;
 import com.mooc.formulaone.models.User;
 import com.mooc.formulaone.services.UserService;
 import jakarta.validation.Valid;
@@ -21,7 +22,8 @@ public class AuthController {
 
     @PostMapping("/auth/login")
     @ResponseStatus(HttpStatus.OK)
-    public User login(@Valid @RequestBody AuthLoginRequest request) {
-        return userService.authenticate(request.email(), request.password());
+    public AuthLoginResponse login(@Valid @RequestBody AuthLoginRequest request) {
+        User user = userService.authenticate(request.email(), request.password());
+        return new AuthLoginResponse(user.getId(), user.getUsername(), user.getEmail());
     }
 }

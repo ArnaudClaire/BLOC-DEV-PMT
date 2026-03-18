@@ -16,3 +16,8 @@ spring:
   h2:
     console:
       enabled: false
+
+app:
+  frontend-base-url: http://localhost:4200
+  mail:
+    from: no-reply@test.local

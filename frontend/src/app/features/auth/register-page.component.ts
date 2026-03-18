@@ -3,10 +3,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TimeoutError, timeout } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
+import { PmtApiService } from '../../core/services/pmt-api.service';
 
 @Component({
   selector: 'app-register-page',
@@ -17,18 +18,26 @@ import { AuthService } from '../../core/services/auth.service';
 export class RegisterPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
+  private readonly api = inject(PmtApiService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
   readonly isSubmitting = signal(false);
   readonly backendStatus = signal('');
+  readonly invitationToken = signal<string | null>(this.route.snapshot.queryParamMap.get('invitation'));
+  readonly invitationProjectName = signal('');
   readonly form = this.fb.nonNullable.group({
     username: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
+
+  constructor() {
+    this.prefillInvitationContext();
+  }
 
   submit(): void {
     if (this.form.invalid) {
@@ -46,10 +55,10 @@ export class RegisterPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.successMessage.set('Compte cree, redirection vers le tableau de bord...');
+          this.successMessage.set('Compte cree, redirection...');
           this.backendStatus.set('Le backend a repondu correctement.');
           this.isSubmitting.set(false);
-          void this.router.navigate(['/dashboard']);
+          void this.navigateAfterRegister();
         },
         error: (error: unknown) => {
           this.errorMessage.set(this.describeError(error));
@@ -63,9 +72,40 @@ export class RegisterPageComponent {
     return control.invalid && control.touched;
   }
 
+  invitationQueryParams(): { invitation: string } | null {
+    const invitationToken = this.invitationToken();
+    return invitationToken ? { invitation: invitationToken } : null;
+  }
+
+  private navigateAfterRegister(): Promise<boolean> {
+    const invitationToken = this.invitationToken();
+    return invitationToken
+      ? this.router.navigate(['/invitation', invitationToken])
+      : this.router.navigate(['/dashboard']);
+  }
+
+  private prefillInvitationContext(): void {
+    const invitationToken = this.invitationToken();
+    if (!invitationToken) {
+      return;
+    }
+
+    this.api.getProjectInvitationByToken(invitationToken)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (invitation) => {
+          this.invitationProjectName.set(invitation.projectName);
+          this.form.controls.email.setValue(invitation.email);
+        },
+        error: () => {
+          this.backendStatus.set('Invitation introuvable ou impossible a charger.');
+        },
+      });
+  }
+
   private describeError(error: unknown): string {
     if (error instanceof TimeoutError) {
-      this.backendStatus.set("Aucune reponse du backend apres 8 secondes.");
+      this.backendStatus.set('Aucune reponse du backend apres 8 secondes.');
       return "Le backend ne repond pas. Verifie que l'API tourne bien sur http://localhost:8081 et que POST /users termine correctement.";
     }
 

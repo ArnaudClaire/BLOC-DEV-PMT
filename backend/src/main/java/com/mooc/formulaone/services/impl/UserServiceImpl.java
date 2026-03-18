@@ -2,9 +2,9 @@ package com.mooc.formulaone.services.impl;
 
 import com.mooc.formulaone.dao.UserRepository;
 import com.mooc.formulaone.exceptions.EntityDontExistException;
+import com.mooc.formulaone.exceptions.InvalidCredentialsException;
 import com.mooc.formulaone.models.User;
 import com.mooc.formulaone.services.UserService;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -63,10 +63,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User authenticate(String email, String password) {
-        User user = findByEmail(email);
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            throw new BadCredentialsException("Email ou mot de passe invalide.");
+        User user;
+        try {
+            user = findByEmail(email);
+        } catch (EntityDontExistException exception) {
+            throw new InvalidCredentialsException();
         }
+
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new InvalidCredentialsException();
+        }
+
         return user;
     }
 

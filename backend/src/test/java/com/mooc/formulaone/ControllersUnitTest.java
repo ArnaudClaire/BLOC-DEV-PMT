@@ -7,14 +7,16 @@ import com.mooc.formulaone.controllers.ProjectMemberController;
 import com.mooc.formulaone.controllers.TaskController;
 import com.mooc.formulaone.controllers.TaskHistoryController;
 import com.mooc.formulaone.controllers.AuthController;
+import com.mooc.formulaone.bootstrap.TaskBoardColumnBootstrap;
 import com.mooc.formulaone.controllers.dto.AuthLoginRequest;
+import com.mooc.formulaone.controllers.dto.AuthLoginResponse;
 import com.mooc.formulaone.controllers.dto.NotificationCreateRequest;
 import com.mooc.formulaone.controllers.dto.ProjectCreateRequest;
 import com.mooc.formulaone.controllers.dto.ProjectInvitationCreateRequest;
 import com.mooc.formulaone.controllers.dto.ProjectMemberCreateRequest;
 import com.mooc.formulaone.controllers.dto.TaskCreateRequest;
 import com.mooc.formulaone.controllers.dto.TaskHistoryCreateRequest;
-import com.mooc.formulaone.models.InvitationStatus;
+import com.mooc.formulaone.controllers.dto.TaskUpdateRequest;
 import com.mooc.formulaone.models.Notification;
 import com.mooc.formulaone.models.NotificationStatus;
 import com.mooc.formulaone.models.NotificationType;
@@ -23,6 +25,7 @@ import com.mooc.formulaone.models.ProjectInvitation;
 import com.mooc.formulaone.models.ProjectMember;
 import com.mooc.formulaone.models.ProjectRole;
 import com.mooc.formulaone.models.Task;
+import com.mooc.formulaone.models.TaskBoardColumn;
 import com.mooc.formulaone.models.TaskHistory;
 import com.mooc.formulaone.models.TaskHistoryAction;
 import com.mooc.formulaone.models.TaskPriority;
@@ -33,6 +36,7 @@ import com.mooc.formulaone.services.ProjectInvitationService;
 import com.mooc.formulaone.services.ProjectService;
 import com.mooc.formulaone.services.ProjectMemberService;
 import com.mooc.formulaone.services.TaskService;
+import com.mooc.formulaone.services.TaskBoardColumnService;
 import com.mooc.formulaone.services.TaskHistoryService;
 import com.mooc.formulaone.services.UserService;
 import org.junit.jupiter.api.Test;
@@ -65,6 +69,9 @@ class ControllersUnitTest {
     private TaskService taskService;
 
     @Mock
+    private TaskBoardColumnService taskBoardColumnService;
+
+    @Mock
     private ProjectMemberService projectMemberService;
 
     @Mock
@@ -81,6 +88,9 @@ class ControllersUnitTest {
 
     @Mock
     private TaskHistoryService taskHistoryService;
+
+    @Mock
+    private TaskBoardColumnBootstrap taskBoardColumnBootstrap;
 
     @InjectMocks
     private TaskController taskController;
@@ -115,7 +125,7 @@ class ControllersUnitTest {
         TaskCreateRequest request = new TaskCreateRequest(
                 "Titre",
                 "Description",
-                TaskStatus.IN_PROGRESS,
+                "IN_PROGRESS",
                 TaskPriority.HIGH,
                 LocalDate.of(2026, 3, 20),
                 LocalDate.of(2026, 3, 21),
@@ -126,6 +136,9 @@ class ControllersUnitTest {
         when(projectService.findById(11L)).thenReturn(project);
         when(userService.findById(12L)).thenReturn(creator);
         when(userService.findById(13L)).thenReturn(assignee);
+        TaskBoardColumn column = new TaskBoardColumn();
+        column.setName("IN_PROGRESS");
+        when(taskBoardColumnService.findByProjectId(11L)).thenReturn(List.of(column));
         when(taskService.create(any(Task.class))).thenReturn(42L);
 
         Long id = taskController.create(request);
@@ -137,7 +150,7 @@ class ControllersUnitTest {
         Task createdTask = taskCaptor.getValue();
         assertThat(createdTask.getTitle()).isEqualTo("Titre");
         assertThat(createdTask.getDescription()).isEqualTo("Description");
-        assertThat(createdTask.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
+        assertThat(createdTask.getStatus()).isEqualTo("IN_PROGRESS");
         assertThat(createdTask.getPriority()).isEqualTo(TaskPriority.HIGH);
         assertThat(createdTask.getDueDate()).isEqualTo(LocalDate.of(2026, 3, 20));
         assertThat(createdTask.getEndDate()).isEqualTo(LocalDate.of(2026, 3, 21));
@@ -163,6 +176,40 @@ class ControllersUnitTest {
         verify(taskService).findAll();
         verify(taskService, times(2)).findById(5L);
         verify(taskService).delete(task);
+    }
+
+    @Test
+    void shouldDelegateTaskUpdateToService() {
+        Task task = new Task();
+        Project project = new Project();
+        project.setId(5L);
+        task.setProject(project);
+        User assignee = new User();
+        TaskBoardColumn column = new TaskBoardColumn();
+        column.setName("DONE");
+        TaskUpdateRequest request = new TaskUpdateRequest(
+                "Titre mis a jour",
+                "Description mise a jour",
+                "DONE",
+                TaskPriority.LOW,
+                LocalDate.of(2026, 4, 2),
+                LocalDate.of(2026, 4, 3),
+                13L
+        );
+        when(taskService.findById(5L)).thenReturn(task);
+        when(userService.findById(13L)).thenReturn(assignee);
+        when(taskBoardColumnService.findByProjectId(5L)).thenReturn(List.of(column));
+
+        taskController.update(5L, request);
+
+        assertThat(task.getTitle()).isEqualTo("Titre mis a jour");
+        assertThat(task.getDescription()).isEqualTo("Description mise a jour");
+        assertThat(task.getStatus()).isEqualTo("DONE");
+        assertThat(task.getPriority()).isEqualTo(TaskPriority.LOW);
+        assertThat(task.getDueDate()).isEqualTo(LocalDate.of(2026, 4, 2));
+        assertThat(task.getEndDate()).isEqualTo(LocalDate.of(2026, 4, 3));
+        assertThat(task.getAssignedTo()).isSameAs(assignee);
+        verify(taskService).update(task);
     }
 
     /**
@@ -211,7 +258,11 @@ class ControllersUnitTest {
                 31L
         );
         when(userService.findById(31L)).thenReturn(owner);
+        Project persistedProject = new Project();
+        persistedProject.setOwner(owner);
         when(projectService.create(any(Project.class))).thenReturn(12L);
+        when(projectService.findById(12L)).thenReturn(persistedProject);
+        when(projectMemberService.create(any(ProjectMember.class))).thenReturn(44L);
 
         Long id = projectController.create(request);
 
@@ -224,6 +275,14 @@ class ControllersUnitTest {
         assertThat(createdProject.getDescription()).isEqualTo("Projet de demonstration");
         assertThat(createdProject.getStartDate()).isEqualTo(LocalDate.of(2026, 3, 16));
         assertThat(createdProject.getOwner()).isSameAs(owner);
+
+        ArgumentCaptor<ProjectMember> projectMemberCaptor = ArgumentCaptor.forClass(ProjectMember.class);
+        verify(projectMemberService).create(projectMemberCaptor.capture());
+
+        ProjectMember createdProjectMember = projectMemberCaptor.getValue();
+        assertThat(createdProjectMember.getRole()).isEqualTo(ProjectRole.ADMIN);
+        assertThat(createdProjectMember.getProject()).isSameAs(persistedProject);
+        assertThat(createdProjectMember.getUser()).isSameAs(owner);
     }
 
     /**
@@ -232,13 +291,15 @@ class ControllersUnitTest {
     @Test
     void shouldDelegateProjectInvitationCreateToService() {
         Project project = new Project();
+        User invitedBy = new User();
         ProjectInvitationCreateRequest request = new ProjectInvitationCreateRequest(
                 "invitee@example.com",
                 ProjectRole.MEMBER,
-                InvitationStatus.PENDING,
-                41L
+                41L,
+                42L
         );
         when(projectService.findById(41L)).thenReturn(project);
+        when(userService.findById(42L)).thenReturn(invitedBy);
         when(projectInvitationService.create(any(ProjectInvitation.class))).thenReturn(15L);
 
         Long id = projectInvitationController.create(request);
@@ -250,8 +311,8 @@ class ControllersUnitTest {
         ProjectInvitation createdInvitation = invitationCaptor.getValue();
         assertThat(createdInvitation.getEmail()).isEqualTo("invitee@example.com");
         assertThat(createdInvitation.getRole()).isEqualTo(ProjectRole.MEMBER);
-        assertThat(createdInvitation.getStatus()).isEqualTo(InvitationStatus.PENDING);
         assertThat(createdInvitation.getProject()).isSameAs(project);
+        assertThat(createdInvitation.getInvitedBy()).isSameAs(invitedBy);
     }
 
     /**
@@ -333,13 +394,17 @@ class ControllersUnitTest {
     @Test
     void shouldDelegateAuthenticationToUserService() {
         User user = new User();
+        user.setId(8L);
+        user.setUsername("alice");
         user.setEmail("alice@example.com");
         AuthLoginRequest request = new AuthLoginRequest("alice@example.com", "secret123");
         when(userService.authenticate("alice@example.com", "secret123")).thenReturn(user);
 
-        User authenticatedUser = authController.login(request);
+        AuthLoginResponse authenticatedUser = authController.login(request);
 
-        assertThat(authenticatedUser).isSameAs(user);
+        assertThat(authenticatedUser.id()).isEqualTo(8L);
+        assertThat(authenticatedUser.username()).isEqualTo("alice");
+        assertThat(authenticatedUser.email()).isEqualTo("alice@example.com");
         verify(userService).authenticate("alice@example.com", "secret123");
     }
 }

@@ -63,6 +63,16 @@ public class TaskServiceImpl implements TaskService {
     }
 
     /**
+     * Persiste les modifications appliquees a une tache existante.
+     *
+     * @param task tache a mettre a jour
+     */
+    @Override
+    public void update(Task task) {
+        taskRepository.save(task);
+    }
+
+    /**
      * Supprime la tache fournie.
      *
      * @param task tache a supprimer

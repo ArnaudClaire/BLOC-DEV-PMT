@@ -1,7 +1,11 @@
 package com.mooc.formulaone.controllers;
 
 import com.mooc.formulaone.controllers.dto.ProjectCreateRequest;
+import com.mooc.formulaone.bootstrap.TaskBoardColumnBootstrap;
 import com.mooc.formulaone.models.Project;
+import com.mooc.formulaone.models.ProjectMember;
+import com.mooc.formulaone.models.ProjectRole;
+import com.mooc.formulaone.services.ProjectMemberService;
 import com.mooc.formulaone.services.ProjectService;
 import com.mooc.formulaone.services.UserService;
 import jakarta.validation.Valid;
@@ -23,10 +27,19 @@ import java.util.List;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final ProjectMemberService projectMemberService;
+    private final TaskBoardColumnBootstrap taskBoardColumnBootstrap;
     private final UserService userService;
 
-    public ProjectController(ProjectService projectService, UserService userService) {
+    public ProjectController(
+            ProjectService projectService,
+            ProjectMemberService projectMemberService,
+            TaskBoardColumnBootstrap taskBoardColumnBootstrap,
+            UserService userService
+    ) {
         this.projectService = projectService;
+        this.projectMemberService = projectMemberService;
+        this.taskBoardColumnBootstrap = taskBoardColumnBootstrap;
         this.userService = userService;
     }
 
@@ -69,7 +82,17 @@ public class ProjectController {
         project.setDescription(request.description());
         project.setStartDate(request.startDate());
         project.setOwner(userService.findById(request.ownerId()));
-        return projectService.create(project);
+        Long projectId = projectService.create(project);
+
+        ProjectMember ownerMembership = new ProjectMember();
+        ownerMembership.setRole(ProjectRole.ADMIN);
+        ownerMembership.setJoinedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+        ownerMembership.setProject(projectService.findById(projectId));
+        ownerMembership.setUser(userService.findById(request.ownerId()));
+        projectMemberService.create(ownerMembership);
+        taskBoardColumnBootstrap.createDefaultColumns(projectService.findById(projectId));
+
+        return projectId;
     }
 
     /**

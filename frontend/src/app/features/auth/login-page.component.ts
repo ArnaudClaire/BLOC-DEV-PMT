@@ -3,10 +3,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TimeoutError, timeout } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
+import { PmtApiService } from '../../core/services/pmt-api.service';
 
 @Component({
   selector: 'app-login-page',
@@ -17,15 +18,23 @@ import { AuthService } from '../../core/services/auth.service';
 export class LoginPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
+  private readonly api = inject(PmtApiService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly errorMessage = signal('');
   readonly backendStatus = signal('');
+  readonly invitationToken = signal<string | null>(this.route.snapshot.queryParamMap.get('invitation'));
+  readonly invitationProjectName = signal('');
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
+
+  constructor() {
+    this.prefillInvitationContext();
+  }
 
   submit(): void {
     if (this.form.invalid) {
@@ -43,7 +52,7 @@ export class LoginPageComponent {
       .subscribe({
         next: () => {
           this.backendStatus.set('Le backend a repondu correctement.');
-          void this.router.navigate(['/dashboard']);
+          void this.navigateAfterLogin();
         },
         error: (error: unknown) => this.errorMessage.set(this.describeError(error)),
       });
@@ -52,6 +61,37 @@ export class LoginPageComponent {
   hasFieldError(fieldName: 'email' | 'password'): boolean {
     const control = this.form.controls[fieldName];
     return control.invalid && control.touched;
+  }
+
+  invitationQueryParams(): { invitation: string } | null {
+    const invitationToken = this.invitationToken();
+    return invitationToken ? { invitation: invitationToken } : null;
+  }
+
+  private navigateAfterLogin(): Promise<boolean> {
+    const invitationToken = this.invitationToken();
+    return invitationToken
+      ? this.router.navigate(['/invitation', invitationToken])
+      : this.router.navigate(['/dashboard']);
+  }
+
+  private prefillInvitationContext(): void {
+    const invitationToken = this.invitationToken();
+    if (!invitationToken) {
+      return;
+    }
+
+    this.api.getProjectInvitationByToken(invitationToken)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (invitation) => {
+          this.invitationProjectName.set(invitation.projectName);
+          this.form.controls.email.setValue(invitation.email);
+        },
+        error: () => {
+          this.backendStatus.set("Invitation introuvable ou impossible a charger.");
+        },
+      });
   }
 
   private describeError(error: unknown): string {
@@ -79,11 +119,11 @@ export class LoginPageComponent {
     }
 
     if (error instanceof Error && /mot de passe|identifiant|email/i.test(error.message)) {
-      this.backendStatus.set("Le backend a refuse les identifiants de connexion.");
+      this.backendStatus.set('Le backend a refuse les identifiants de connexion.');
       return 'Identifiant ou mot de passe incorrect.';
     }
 
-    this.backendStatus.set("Le front a recu une erreur non HTTP pendant la connexion.");
+    this.backendStatus.set('Le front a recu une erreur non HTTP pendant la connexion.');
     return 'Connexion impossible. Verifie les informations saisies et la disponibilite du backend.';
   }
 }

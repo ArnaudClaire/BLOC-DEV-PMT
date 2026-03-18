@@ -1,6 +1,6 @@
 <section class="panel-card">
   <div class="panel-head">
-    <h2>Nouvelle tache</h2>
+    <h2>Nouvelle tâche</h2>
     <span class="subtle">POST /tasks</span>
   </div>
 
@@ -10,36 +10,36 @@
       <input formControlName="title" type="text" placeholder="Configurer les invitations, revoir les tests..." />
     </label>
     @if (form().controls['title'].invalid && form().controls['title'].touched) {
-      <p class="message error">Le titre doit contenir au moins 3 caracteres.</p>
+      <p class="message error">Le titre doit contenir au moins 3 caractères.</p>
     }
 
     <label>
       <span>Description</span>
-      <textarea formControlName="description" rows="4" placeholder="Contexte, criteres d'acceptation, blocages..."></textarea>
+      <textarea formControlName="description" rows="4" placeholder="Contexte, critères d'acceptation, blocages..."></textarea>
     </label>
     @if (form().controls['description'].invalid && form().controls['description'].touched) {
-      <p class="message error">La description doit contenir au moins 10 caracteres.</p>
+      <p class="message error">La description doit contenir au moins 10 caractères.</p>
     }
 
     <label>
       <span>Projet</span>
       <select formControlName="projectId">
-        <option [ngValue]="0">Selectionne un projet</option>
+        <option [ngValue]="0">Sélectionne un projet</option>
         @for (project of projects(); track project.id) {
           <option [ngValue]="project.id">{{ project.name }}</option>
         }
       </select>
     </label>
     @if (form().controls['projectId'].invalid && form().controls['projectId'].touched) {
-      <p class="message error">Selectionne un projet avant de creer la tache.</p>
+      <p class="message error">Sélectionne un projet avant de créer la tâche.</p>
     }
 
     <div class="two-columns">
       <label>
-        <span>Priorite</span>
+        <span>Priorité</span>
         <select formControlName="priority">
           @for (priority of priorities(); track priority) {
-            <option [value]="priority">{{ priority }}</option>
+            <option [value]="priority">{{ priorityLabel(priority) }}</option>
           }
         </select>
       </label>
@@ -48,7 +48,7 @@
         <span>Statut initial</span>
         <select formControlName="status">
           @for (status of statuses(); track status) {
-            <option [value]="status">{{ status }}</option>
+            <option [value]="status">{{ statusLabel(status) }}</option>
           }
         </select>
       </label>
@@ -56,29 +56,29 @@
 
     <div class="two-columns">
       <label>
-        <span>Echeance</span>
+        <span>Échéance</span>
         <input formControlName="dueDate" type="date" />
       </label>
       @if (form().controls['dueDate'].invalid && form().controls['dueDate'].touched) {
-        <p class="message error">L'echeance est obligatoire.</p>
+        <p class="message error">L'échéance est obligatoire.</p>
       }
 
       <label>
-        <span>Assigne a</span>
+        <span>Assigné à</span>
         <select formControlName="assignedToId">
-          <option [ngValue]="0">Selectionne un membre</option>
+          <option [ngValue]="0">Sélectionne un membre</option>
           @for (user of users(); track user.id) {
             <option [ngValue]="user.id">{{ user.username }}</option>
           }
         </select>
       </label>
       @if (form().controls['assignedToId'].invalid && form().controls['assignedToId'].touched) {
-        <p class="message error">Selectionne un utilisateur assigne.</p>
+        <p class="message error">Sélectionne un utilisateur assigné.</p>
       }
     </div>
 
     <button class="primary-button dark" type="submit" [disabled]="saving() || disabled()">
-      {{ saving() ? 'Creation...' : 'Creer la tache' }}
+      {{ saving() ? 'Création...' : 'Créer la tâche' }}
     </button>
   </form>
 </section>

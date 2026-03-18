@@ -30,6 +30,13 @@ public interface TaskService {
     Long create(Task task);
 
     /**
+     * Met a jour une tache existante.
+     *
+     * @param task tache a persister
+     */
+    void update(Task task);
+
+    /**
      * Supprime une tache existante.
      *
      * @param task tache a supprimer

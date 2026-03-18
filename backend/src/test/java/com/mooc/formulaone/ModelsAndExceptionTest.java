@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Set;
 
@@ -50,7 +51,7 @@ class ModelsAndExceptionTest {
         invitation.setId(3L);
         invitation.setEmail("guest@example.com");
         invitation.setRole(ProjectRole.ADMIN);
-        invitation.sendInvitation();
+        invitation.sendInvitation("token-123", Timestamp.from(Instant.parse("2026-03-23T10:00:00Z")));
         invitation.setProject(project);
 
         ProjectMember projectMember = new ProjectMember();
@@ -65,7 +66,7 @@ class ModelsAndExceptionTest {
         task.updateTask(
                 "Task",
                 "Description",
-                TaskStatus.DONE,
+                "DONE",
                 TaskPriority.LOW,
                 LocalDate.of(2026, 4, 1),
                 LocalDate.of(2026, 4, 2)
@@ -141,7 +142,7 @@ class ModelsAndExceptionTest {
         assertThat(task.getId()).isEqualTo(5L);
         assertThat(task.getTitle()).isEqualTo("Task");
         assertThat(task.getDescription()).isEqualTo("Description");
-        assertThat(task.getStatus()).isEqualTo(TaskStatus.DONE);
+        assertThat(task.getStatus()).isEqualTo("DONE");
         assertThat(task.getPriority()).isEqualTo(TaskPriority.LOW);
         assertThat(task.getDueDate()).isEqualTo(LocalDate.of(2026, 4, 1));
         assertThat(task.getEndDate()).isEqualTo(LocalDate.of(2026, 4, 2));
@@ -167,7 +168,13 @@ class ModelsAndExceptionTest {
         assertThat(createdAt).isNotNull();
         assertThat(updatedAt).isNotNull();
         assertThat(user.getUpdatedAt()).isAfterOrEqualTo(updatedAt);
-        assertThat(InvitationStatus.values()).containsExactly(InvitationStatus.PENDING, InvitationStatus.ACCEPTED, InvitationStatus.DECLINED);
+        assertThat(InvitationStatus.values()).containsExactly(
+                InvitationStatus.PENDING,
+                InvitationStatus.ACCEPTED,
+                InvitationStatus.DECLINED,
+                InvitationStatus.EXPIRED,
+                InvitationStatus.CANCELED
+        );
         assertThat(NotificationStatus.values()).containsExactly(NotificationStatus.SENT, NotificationStatus.READ);
         assertThat(NotificationType.values()).containsExactly(NotificationType.TASK_ASSIGNED, NotificationType.INVITATION_SENT);
         assertThat(ProjectRole.values()).containsExactly(ProjectRole.ADMIN, ProjectRole.MEMBER, ProjectRole.OBSERVER);
@@ -182,11 +189,13 @@ class ModelsAndExceptionTest {
     @Test
     void shouldHandleInvitationTransitions() {
         ProjectInvitation invitation = new ProjectInvitation();
+        User user = new User();
+        user.setEmail("guest@example.com");
 
-        invitation.sendInvitation();
+        invitation.sendInvitation("token-456", Timestamp.from(Instant.parse("2026-03-24T10:00:00Z")));
         assertThat(invitation.getStatus()).isEqualTo(InvitationStatus.PENDING);
 
-        invitation.accept();
+        invitation.accept(user, Timestamp.from(Instant.parse("2026-03-18T10:00:00Z")));
         assertThat(invitation.getStatus()).isEqualTo(InvitationStatus.ACCEPTED);
 
         invitation.decline();

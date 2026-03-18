@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ import com.mooc.formulaone.models.TaskStatus;
 import com.mooc.formulaone.models.User;
 import com.mooc.formulaone.services.ProjectMemberService;
 import com.mooc.formulaone.services.ProjectService;
+import com.mooc.formulaone.services.TaskBoardColumnService;
 import com.mooc.formulaone.services.TaskService;
 import com.mooc.formulaone.services.UserService;
 
@@ -53,6 +55,9 @@ class CrudControllersIntegrationTest {
 
     @Autowired
     private TaskService taskService;
+
+    @Autowired
+    private TaskBoardColumnService taskBoardColumnService;
 
     /**
      * Verifie le cycle complet de vie d'un utilisateur via l'API:
@@ -119,8 +124,65 @@ class CrudControllersIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.username").value("auth-user"))
                 .andExpect(jsonPath("$.email").value("auth@example.com"))
-                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+                .andExpect(jsonPath("$.passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.ownedProjects").doesNotExist());
+    }
+
+    @Test
+    void shouldAuthenticateUserWithExistingRelationsThroughApi() throws Exception {
+        Long ownerId = createUser("seeded-owner", "seeded.owner@example.com", "demo123");
+        Long assigneeId = createUser("seeded-member", "seeded.member@example.com", "demo123");
+        Long projectId = createProject(ownerId, "Seeded Project");
+        createTask(projectId, ownerId, assigneeId);
+
+        String loginJson = """
+                {
+                  "email": "seeded.owner@example.com",
+                  "password": "demo123"
+                }
+                """;
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(ownerId.intValue()))
+                .andExpect(jsonPath("$.username").value("seeded-owner"))
+                .andExpect(jsonPath("$.email").value("seeded.owner@example.com"))
+                .andExpect(jsonPath("$.ownedProjects").doesNotExist())
+                .andExpect(jsonPath("$.projectMemberships").doesNotExist())
+                .andExpect(jsonPath("$.createdTasks").doesNotExist());
+    }
+
+    @Test
+    void shouldReturnUnauthorizedWhenCredentialsAreInvalid() throws Exception {
+        String userJson = """
+                {
+                  "username": "auth-user",
+                  "email": "auth-fail@example.com",
+                  "password": "secret123"
+                }
+                """;
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isCreated());
+
+        String loginJson = """
+                {
+                  "email": "auth-fail@example.com",
+                  "password": "wrong-password"
+                }
+                """;
+
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson))
+                .andExpect(status().isUnauthorized());
     }
 
     /**
@@ -176,10 +238,10 @@ class CrudControllersIntegrationTest {
                 {
                   "email": "new.member@example.com",
                   "role": "MEMBER",
-                  "status": "PENDING",
-                  "projectId": %d
+                  "projectId": %d,
+                  "invitedById": %d
                 }
-                """.formatted(projectId);
+                """.formatted(projectId, ownerId);
 
         Long invitationId = Long.valueOf(mockMvc.perform(post("/project-invitations")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -280,6 +342,38 @@ class CrudControllersIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void shouldUpdateTaskThroughApi() throws Exception {
+        Long ownerId = createUser("owner-update", "owner-update@example.com", "demo123");
+        Long assigneeId = createUser("assignee-update", "assignee-update@example.com", "demo123");
+        Long projectId = createProject(ownerId, "Update Board");
+        Long taskId = createTask(projectId, ownerId, assigneeId);
+
+        String updateJson = """
+                {
+                  "title": "Tache mise a jour",
+                  "description": "Description de mise a jour suffisamment longue",
+                  "status": "DONE",
+                  "priority": "LOW",
+                  "dueDate": "2026-04-15",
+                  "endDate": "2026-04-16",
+                  "assignedToId": %d
+                }
+                """.formatted(ownerId);
+
+        mockMvc.perform(put("/tasks/{id}", taskId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateJson))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/tasks/{id}", taskId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Tache mise a jour"))
+                .andExpect(jsonPath("$.status").value("DONE"))
+                .andExpect(jsonPath("$.priority").value("LOW"))
+                .andExpect(jsonPath("$.assignedTo.email").value("owner-update@example.com"));
+    }
+
     /**
      * Cree un utilisateur minimal utilisable dans les scenarios
      * d'integration qui ont besoin de relations persistantes.
@@ -289,10 +383,23 @@ class CrudControllersIntegrationTest {
      * @return l'identifiant genere en base
      */
     private Long createUser(String username, String email) {
+        return createUser(username, email, "hash");
+    }
+
+    /**
+     * Cree un utilisateur avec le mot de passe brut fourni afin de couvrir
+     * les scenarios d'authentification et les graphes deja rattaches.
+     *
+     * @param username nom fonctionnel de l'utilisateur
+     * @param email adresse email associee
+     * @param rawPassword mot de passe brut a encoder
+     * @return l'identifiant genere en base
+     */
+    private Long createUser(String username, String email, String rawPassword) {
         User user = new User();
         user.setUsername(username);
         user.setEmail(email);
-        user.setPasswordHash("hash");
+        user.setPasswordHash(rawPassword);
         return userService.create(user);
     }
 
@@ -308,7 +415,9 @@ class CrudControllersIntegrationTest {
         project.setName(name);
         project.setDescription(name + " description");
         project.setOwner(userService.findById(ownerId));
-        return projectService.create(project);
+        Long projectId = projectService.create(project);
+        createDefaultColumns(projectService.findById(projectId));
+        return projectId;
     }
 
     /**
@@ -324,12 +433,23 @@ class CrudControllersIntegrationTest {
         Task task = new Task();
         task.setTitle("Write docs");
         task.setDescription("Document API");
-        task.setStatus(TaskStatus.TODO);
+        task.setStatus("TODO");
         task.setPriority(TaskPriority.MEDIUM);
         task.setDueDate(LocalDate.of(2026, 4, 1));
         task.setProject(projectService.findById(projectId));
         task.setCreatedBy(userService.findById(createdById));
         task.setAssignedTo(userService.findById(assignedToId));
         return taskService.create(task);
+    }
+
+    private void createDefaultColumns(Project project) {
+        String[] defaultColumns = { "TODO", "IN_PROGRESS", "DONE" };
+        for (int index = 0; index < defaultColumns.length; index++) {
+            com.mooc.formulaone.models.TaskBoardColumn column = new com.mooc.formulaone.models.TaskBoardColumn();
+            column.setName(defaultColumns[index]);
+            column.setDisplayOrder(index);
+            column.setProject(project);
+            taskBoardColumnService.create(column);
+        }
     }
 }

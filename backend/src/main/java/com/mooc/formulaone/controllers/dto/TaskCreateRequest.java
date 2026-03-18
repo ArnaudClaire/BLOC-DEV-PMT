@@ -1,7 +1,6 @@
 package com.mooc.formulaone.controllers.dto;
 
 import com.mooc.formulaone.models.TaskPriority;
-import com.mooc.formulaone.models.TaskStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -26,8 +25,8 @@ public record TaskCreateRequest(
         @NotBlank
         String title,
         String description,
-        @NotNull
-        TaskStatus status,
+        @NotBlank
+        String status,
         @NotNull
         TaskPriority priority,
         LocalDate dueDate,
