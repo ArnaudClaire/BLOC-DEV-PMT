@@ -391,6 +391,47 @@ Set-Location .\backend
 .\mvnw.cmd test
 ```
 
+## CI/CD
+
+Le depot contient un workflow GitHub Actions dans [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml).
+
+Ce pipeline :
+
+- lance les tests backend Maven
+- lance les tests frontend Angular
+- build les images Docker backend et frontend
+- push les images sur Docker Hub uniquement lors d'un `push` sur `main`
+
+Secrets GitHub Actions obligatoires :
+
+```text
+DOCKERHUB_USERNAME
+DOCKERHUB_TOKEN
+```
+
+Variables GitHub Actions optionnelles :
+
+```text
+DOCKERHUB_BACKEND_IMAGE
+DOCKERHUB_FRONTEND_IMAGE
+```
+
+Si ces variables ne sont pas definies, le workflow utilisera par defaut :
+
+```text
+<DOCKERHUB_USERNAME>/pmt-backend
+<DOCKERHUB_USERNAME>/pmt-frontend
+```
+
+Le frontend dispose maintenant d'un conteneur Nginx dans [`frontend/Dockerfile`](frontend/Dockerfile).
+Par defaut, il attend un backend HTTP disponible via la variable d'environnement runtime :
+
+```text
+API_UPSTREAM=http://backend:8081
+```
+
+Cette variable sert au proxy Nginx pour les appels `/api`.
+
 ## Documentation
 
 - Collection Postman : `docs/postman/`
