@@ -9,6 +9,9 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
   templateUrl: './dashboard-project-form.component.html',
   styleUrl: './dashboard-project-form.component.scss',
 })
+/**
+ * Encapsule le formulaire de création de projet affiché dans la colonne latérale.
+ */
 export class DashboardProjectFormComponent {
   readonly form = input.required<FormGroup>();
   readonly saving = input.required<boolean>();

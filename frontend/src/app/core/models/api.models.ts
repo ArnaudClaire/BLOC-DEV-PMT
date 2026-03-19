@@ -1,3 +1,6 @@
+/**
+ * Types partagés entre le frontend et les réponses/payloads exposés par l'API PMT.
+ */
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 export type MemberRole = 'ADMIN' | 'MEMBER' | 'OBSERVER';
@@ -5,6 +8,9 @@ export type NotificationType = 'TASK_ASSIGNED' | 'INVITATION_SENT';
 export type NotificationStatus = 'SENT' | 'READ';
 export type TaskHistoryAction = 'CREATED' | 'UPDATED' | 'ASSIGNED' | 'STATUS_CHANGED' | 'COMPLETED';
 
+/**
+ * Représente un utilisateur côté frontend.
+ */
 export interface User {
   id: number;
   username: string;
@@ -18,6 +24,9 @@ export interface CreateUserPayload {
   password: string;
 }
 
+/**
+ * Représente un projet enrichi des champs utiles à l'interface.
+ */
 export interface Project {
   id: number;
   name: string;
@@ -33,6 +42,9 @@ export interface CreateProjectPayload {
   ownerId: number;
 }
 
+/**
+ * Représente une tâche telle qu'elle est manipulée dans l'UI.
+ */
 export interface Task {
   id: number;
   title: string;
@@ -68,6 +80,9 @@ export interface UpdateTaskPayload {
   assignedToId?: number;
 }
 
+/**
+ * Représente l'appartenance d'un utilisateur à un projet.
+ */
 export interface ProjectMember {
   id: number;
   role: MemberRole | string;
@@ -83,6 +98,9 @@ export interface CreateProjectMemberPayload {
   userId: number;
 }
 
+/**
+ * Représente une invitation de projet avec son état métier.
+ */
 export interface ProjectInvitation {
   id: number;
   email: string;
@@ -126,6 +144,9 @@ export interface ProjectInvitationAcceptResponse {
   projectId: number;
 }
 
+/**
+ * Notification utilisateur historisée et affichable dans le dashboard.
+ */
 export interface Notification {
   id: number;
   type?: NotificationType | string;
@@ -145,6 +166,9 @@ export interface CreateNotificationPayload {
   taskId?: number;
 }
 
+/**
+ * Entrée d'historique décrivant une modification apportée à une tâche.
+ */
 export interface TaskHistory {
   id: number;
   actionType?: TaskHistoryAction | string;

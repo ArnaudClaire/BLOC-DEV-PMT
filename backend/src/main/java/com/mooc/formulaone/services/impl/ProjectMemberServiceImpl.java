@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+/**
+ * Implémentation CRUD des associations entre utilisateurs et projets.
+ */
 public class ProjectMemberServiceImpl implements ProjectMemberService {
 
     private final ProjectMemberRepository projectMemberRepository;

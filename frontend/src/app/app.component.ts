@@ -11,6 +11,10 @@ import { AuthService } from './core/services/auth.service';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
+/**
+ * Composant racine de l'interface.
+ * Il expose l'état de session et la navigation globale affichée dans le shell applicatif.
+ */
 export class AppComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -19,6 +23,9 @@ export class AppComponent {
   readonly isAuthenticated = this.auth.isAuthenticated;
   readonly title = computed(() => this.isAuthenticated() ? 'Workspace PMT' : 'PMT Frontend');
 
+  /**
+   * Ferme la session locale puis renvoie l'utilisateur vers l'écran de connexion.
+   */
   logout(): void {
     this.auth.logout();
     void this.router.navigate(['/login']);

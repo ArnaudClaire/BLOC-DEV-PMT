@@ -1,5 +1,9 @@
 import { MemberRole, Notification, ProjectInvitation, ProjectMember, Task, TaskHistory, TaskStatus } from '../../../core/models/api.models';
 
+/**
+ * Modèles de vue spécifiques au dashboard.
+ * Ils enrichissent les données API brutes avec des libellés et des informations calculées pour l'interface.
+ */
 export type TaskCardView = Task & {
   projectName: string;
   assigneeName: string;

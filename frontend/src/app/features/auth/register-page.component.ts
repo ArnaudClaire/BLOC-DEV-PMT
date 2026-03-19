@@ -15,6 +15,9 @@ import { PmtApiService } from '../../core/services/pmt-api.service';
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './register-page.component.html',
 })
+/**
+ * Écran d'inscription utilisateur avec support du flux d'invitation.
+ */
 export class RegisterPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
@@ -39,6 +42,9 @@ export class RegisterPageComponent {
     this.prefillInvitationContext();
   }
 
+  /**
+   * Valide le formulaire puis crée le compte utilisateur via l'API.
+   */
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -67,6 +73,9 @@ export class RegisterPageComponent {
       });
   }
 
+  /**
+   * Indique si un champ doit afficher son message de validation.
+   */
   hasFieldError(fieldName: 'username' | 'email' | 'password'): boolean {
     const control = this.form.controls[fieldName];
     return control.invalid && control.touched;
@@ -103,6 +112,9 @@ export class RegisterPageComponent {
       });
   }
 
+  /**
+   * Traduit les erreurs de l'inscription en message lisible pour l'utilisateur.
+   */
   private describeError(error: unknown): string {
     if (error instanceof TimeoutError) {
       this.backendStatus.set('Aucune reponse du backend apres 8 secondes.');

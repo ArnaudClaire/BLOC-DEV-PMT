@@ -1,3 +1,6 @@
+/**
+ * Couvre les scénarios principaux de l'écran de connexion.
+ */
 import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';

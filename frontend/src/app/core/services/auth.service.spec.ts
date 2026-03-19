@@ -1,3 +1,6 @@
+/**
+ * Vérifie la gestion de session et l'adaptation des réponses backend par le service d'authentification.
+ */
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 

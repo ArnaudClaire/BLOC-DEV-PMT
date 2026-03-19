@@ -23,6 +23,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+/**
+ * Implémente le flux métier complet des invitations de projet.
+ */
 public class ProjectInvitationServiceImpl implements ProjectInvitationService {
 
     private final ProjectInvitationRepository projectInvitationRepository;
@@ -40,6 +43,11 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
     }
 
     @Override
+    /**
+     * Retourne toutes les invitations après mise à jour éventuelle de leur expiration.
+     *
+     * @return l'ensemble des invitations connues
+     */
     public List<ProjectInvitation> findAll() {
         List<ProjectInvitation> invitations = new ArrayList<>();
         projectInvitationRepository.findAll().forEach(invitations::add);
@@ -48,6 +56,12 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
     }
 
     @Override
+    /**
+     * Recherche une invitation par identifiant.
+     *
+     * @param id identifiant technique
+     * @return l'invitation correspondante
+     */
     public ProjectInvitation findById(Long id) {
         Optional<ProjectInvitation> projectInvitation = projectInvitationRepository.findById(id);
         if (projectInvitation.isPresent()) {
@@ -57,6 +71,12 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
     }
 
     @Override
+    /**
+     * Liste les invitations d'un projet.
+     *
+     * @param projectId identifiant du projet
+     * @return les invitations du projet
+     */
     public List<ProjectInvitation> findByProjectId(Long projectId) {
         List<ProjectInvitation> invitations = projectInvitationRepository.findByProjectIdOrderByCreatedAtDesc(projectId);
         invitations.forEach(this::refreshExpirationIfNeeded);
@@ -64,12 +84,24 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
     }
 
     @Override
+    /**
+     * Résout une invitation à partir de son token public.
+     *
+     * @param token token transmis dans le lien d'invitation
+     * @return l'invitation correspondante
+     */
     public ProjectInvitation findByToken(String token) {
         ProjectInvitation invitation = projectInvitationRepository.findByToken(token).orElseThrow(EntityDontExistException::new);
         return refreshExpirationIfNeeded(invitation);
     }
 
     @Override
+    /**
+     * Crée une invitation, génère son token et déclenche l'envoi d'email.
+     *
+     * @param projectInvitation invitation à enregistrer
+     * @return identifiant généré
+     */
     public Long create(ProjectInvitation projectInvitation) {
         validateInvitationCreation(projectInvitation);
 
@@ -85,6 +117,13 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
     }
 
     @Override
+    /**
+     * Accepte une invitation pour l'utilisateur fourni.
+     *
+     * @param token token d'invitation
+     * @param user utilisateur qui accepte l'invitation
+     * @return invitation mise à jour
+     */
     public ProjectInvitation accept(String token, User user) {
         ProjectInvitation invitation = findByToken(token);
 
@@ -112,6 +151,13 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
     }
 
     @Override
+    /**
+     * Annule une invitation encore en attente.
+     *
+     * @param invitationId identifiant de l'invitation
+     * @param adminUserId identifiant de l'administrateur demandeur
+     * @return invitation annulée
+     */
     public ProjectInvitation cancel(Long invitationId, Long adminUserId) {
         ProjectInvitation invitation = findById(invitationId);
         ensureProjectAdmin(invitation.getProject(), adminUserId);
@@ -125,6 +171,13 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
     }
 
     @Override
+    /**
+     * Renvoie une invitation existante avec un nouveau token et une nouvelle expiration.
+     *
+     * @param invitationId identifiant de l'invitation
+     * @param adminUserId identifiant de l'administrateur demandeur
+     * @return invitation renvoyée
+     */
     public ProjectInvitation resend(Long invitationId, Long adminUserId) {
         ProjectInvitation invitation = findById(invitationId);
         ensureProjectAdmin(invitation.getProject(), adminUserId);
@@ -144,6 +197,11 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
     }
 
     @Override
+    /**
+     * Supprime définitivement une invitation.
+     *
+     * @param projectInvitation invitation à supprimer
+     */
     public void delete(ProjectInvitation projectInvitation) {
         projectInvitationRepository.delete(projectInvitation);
     }

@@ -6,6 +6,9 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
 
+/**
+ * Repository Spring Data pour les membres de projet et leurs rôles.
+ */
 public interface ProjectMemberRepository extends CrudRepository<ProjectMember, Long> {
     Optional<ProjectMember> findByProjectIdAndUserId(Long projectId, Long userId);
 

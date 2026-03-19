@@ -11,6 +11,9 @@ import { Project, TaskPriority, TaskStatus, User } from '../../../../core/models
   templateUrl: './dashboard-task-form.component.html',
   styleUrl: './dashboard-task-form.component.scss',
 })
+/**
+ * Encapsule le formulaire de création de tâche utilisé dans le dashboard.
+ */
 export class DashboardTaskFormComponent {
   readonly form = input.required<FormGroup>();
   readonly projects = input.required<Project[]>();
@@ -22,6 +25,9 @@ export class DashboardTaskFormComponent {
 
   readonly formSubmitted = output<void>();
 
+  /**
+   * Convertit la priorité technique en libellé lisible.
+   */
   priorityLabel(priority: TaskPriority | string): string {
     switch (priority) {
       case 'HIGH':
@@ -35,6 +41,9 @@ export class DashboardTaskFormComponent {
     }
   }
 
+  /**
+   * Convertit le statut technique en libellé lisible.
+   */
   statusLabel(status: TaskStatus | string): string {
     switch (status) {
       case 'TODO':

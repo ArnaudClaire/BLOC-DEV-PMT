@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+/**
+ * Implémentation CRUD des entrées d'historique de tâches.
+ */
 public class TaskHistoryServiceImpl implements TaskHistoryService {
 
     private final TaskHistoryRepository taskHistoryRepository;

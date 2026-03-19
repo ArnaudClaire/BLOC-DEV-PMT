@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+/**
+ * Gère les opérations de connexion utilisateur côté API.
+ */
 public class AuthController {
 
     private final UserService userService;
@@ -20,6 +23,12 @@ public class AuthController {
         this.userService = userService;
     }
 
+    /**
+     * Vérifie l'email et le mot de passe puis retourne l'utilisateur connecté.
+     *
+     * @param request identifiants saisis par le client
+     * @return les informations minimales de session côté front
+     */
     @PostMapping("/auth/login")
     @ResponseStatus(HttpStatus.OK)
     public AuthLoginResponse login(@Valid @RequestBody AuthLoginRequest request) {

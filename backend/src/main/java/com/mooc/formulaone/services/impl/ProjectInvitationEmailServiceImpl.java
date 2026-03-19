@@ -11,6 +11,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Service
+/**
+ * Envoie les emails d'invitation de projet ou journalise le lien en fallback.
+ */
 public class ProjectInvitationEmailServiceImpl implements ProjectInvitationEmailService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProjectInvitationEmailServiceImpl.class);
@@ -30,6 +33,11 @@ public class ProjectInvitationEmailServiceImpl implements ProjectInvitationEmail
     }
 
     @Override
+    /**
+     * Construit puis envoie l'email d'invitation associé à un projet.
+     *
+     * @param invitation invitation persistée contenant email, rôle et token
+     */
     public void sendInvitation(ProjectInvitation invitation) {
         String invitationLink = "%s/invitation/%s".formatted(frontendBaseUrl, invitation.getToken());
         JavaMailSender mailSender = mailSenderProvider.getIfAvailable();

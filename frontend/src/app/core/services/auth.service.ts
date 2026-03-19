@@ -9,11 +9,17 @@ const SESSION_KEY = 'mpmt.current-user';
 @Injectable({
   providedIn: 'root',
 })
+/**
+ * Gère l'authentification côté frontend ainsi que la persistance de la session dans le navigateur.
+ */
 export class AuthService {
   private readonly api = inject(PmtApiService);
   readonly currentUser = signal<User | null>(this.readStoredUser());
   readonly isAuthenticated = computed(() => this.currentUser() !== null);
 
+  /**
+   * Crée un compte puis ouvre immédiatement une session locale avec l'utilisateur créé.
+   */
   register(payload: CreateUserPayload): Observable<User> {
     return this.api.createUser(payload).pipe(
       map((response) => this.normalizeRegisteredUser(response, payload)),
@@ -21,15 +27,24 @@ export class AuthService {
     );
   }
 
+  /**
+   * Authentifie l'utilisateur auprès du backend puis mémorise la session.
+   */
   login(email: string, password: string): Observable<User> {
     return this.api.login({ email, password }).pipe(tap((user) => this.setSession(user)));
   }
 
+  /**
+   * Supprime la session locale courante.
+   */
   logout(): void {
     this.currentUser.set(null);
     localStorage.removeItem(SESSION_KEY);
   }
 
+  /**
+   * Retourne l'utilisateur courant ou lève une erreur quand aucune session n'est ouverte.
+   */
   requireUser(): User {
     const user = this.currentUser();
 
@@ -40,11 +55,17 @@ export class AuthService {
     return user;
   }
 
+  /**
+   * Enregistre la session en mémoire et dans le `localStorage`.
+   */
   private setSession(user: User): void {
     this.currentUser.set(user);
     localStorage.setItem(SESSION_KEY, JSON.stringify(user));
   }
 
+  /**
+   * Tolère plusieurs formats de réponse backend pour l'inscription afin de garder le front robuste.
+   */
   private normalizeRegisteredUser(response: unknown, payload: CreateUserPayload): User {
     if (typeof response === 'number') {
       return {
@@ -92,6 +113,9 @@ export class AuthService {
       && typeof (value as Partial<User>).email === 'string';
   }
 
+  /**
+   * Recharge la session persistée dans le navigateur au démarrage du service.
+   */
   private readStoredUser(): User | null {
     try {
       const rawValue = localStorage.getItem(SESSION_KEY);

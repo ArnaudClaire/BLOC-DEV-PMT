@@ -15,6 +15,9 @@ import { PmtApiService } from '../../core/services/pmt-api.service';
   imports: [CommonModule, RouterLink],
   templateUrl: './invitation-accept-page.component.html',
 })
+/**
+ * Gère l'affichage et l'acceptation d'une invitation de projet résolue depuis son token.
+ */
 export class InvitationAcceptPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -44,6 +47,9 @@ export class InvitationAcceptPageComponent {
     this.loadInvitation();
   }
 
+  /**
+   * Retourne le libellé lisible du rôle reçu depuis l'API.
+   */
   roleLabel(role: string | undefined): string {
     switch (role) {
       case 'ADMIN':
@@ -57,6 +63,9 @@ export class InvitationAcceptPageComponent {
     }
   }
 
+  /**
+   * Retourne un libellé utilisateur pour l'état courant de l'invitation.
+   */
   statusLabel(status: string | undefined): string {
     switch (status) {
       case 'PENDING':
@@ -82,6 +91,9 @@ export class InvitationAcceptPageComponent {
     return { invitation: this.token };
   }
 
+  /**
+   * Tente d'accepter l'invitation pour l'utilisateur actuellement connecté.
+   */
   acceptInvitation(): void {
     const currentUser = this.currentUser();
     if (!currentUser || !this.canAcceptInvitation()) {
@@ -104,6 +116,9 @@ export class InvitationAcceptPageComponent {
     });
   }
 
+  /**
+   * Force une reconnexion lorsque la session ouverte ne correspond pas à l'email invité.
+   */
   switchAccount(): void {
     this.auth.logout();
     void this.router.navigate(['/login'], {
@@ -111,6 +126,9 @@ export class InvitationAcceptPageComponent {
     });
   }
 
+  /**
+   * Charge les métadonnées publiques de l'invitation depuis le token présent dans l'URL.
+   */
   private loadInvitation(): void {
     this.loading.set(true);
     this.errorMessage.set('');
@@ -124,6 +142,9 @@ export class InvitationAcceptPageComponent {
     });
   }
 
+  /**
+   * Normalise les erreurs réseau ou métier en texte affichable dans la page.
+   */
   private describeError(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
       if (typeof error.error === 'string' && error.error.trim()) {

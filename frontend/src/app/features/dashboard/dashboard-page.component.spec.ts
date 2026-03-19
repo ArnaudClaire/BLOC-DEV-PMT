@@ -1,3 +1,6 @@
+/**
+ * Vérifie les interactions clés du dashboard et de ses formulaires métiers.
+ */
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';

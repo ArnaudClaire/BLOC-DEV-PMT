@@ -52,6 +52,10 @@ import {
   templateUrl: './dashboard-page.component.html',
   styleUrl: './dashboard-page.component.scss',
 })
+/**
+ * Orchestration principale du dashboard PMT.
+ * Ce composant agrège les données du backend, pilote les formulaires et coordonne les vues projet, tâches, notifications et invitations.
+ */
 export class DashboardPageComponent {
   private readonly api = inject(PmtApiService);
   private readonly auth = inject(AuthService);
@@ -60,10 +64,16 @@ export class DashboardPageComponent {
   private pendingProjectSelection: number | 'all' | null = null;
   private pendingTaskSelection: number | null = null;
 
+  /**
+   * Référentiels de valeurs affichées dans les formulaires.
+   */
   readonly priorities: TaskPriority[] = ['LOW', 'MEDIUM', 'HIGH'];
   readonly statuses: TaskStatus[] = ['TODO', 'IN_PROGRESS', 'DONE'];
   readonly memberRoles: MemberRole[] = ['ADMIN', 'MEMBER', 'OBSERVER'];
 
+  /**
+   * Signaux d'état UI utilisés pour les chargements, sauvegardes et erreurs.
+   */
   readonly loading = signal(true);
   readonly savingProject = signal(false);
   readonly savingTask = signal(false);
@@ -75,6 +85,9 @@ export class DashboardPageComponent {
   readonly selectedProjectId = signal<number | 'all'>('all');
   readonly selectedTaskId = signal<number | null>(null);
 
+  /**
+   * Données brutes synchronisées depuis le backend puis réutilisées dans les vues calculées.
+   */
   private readonly allProjects = signal<Project[]>([]);
   private readonly allTasks = signal<Task[]>([]);
   private readonly allUsers = signal<User[]>([]);

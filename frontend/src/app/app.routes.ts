@@ -1,6 +1,10 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
+/**
+ * Déclare les routes principales du frontend PMT.
+ * Les écrans métiers sont chargés paresseusement pour limiter le poids initial du bundle.
+ */
 export const routes: Routes = [
   {
     path: '',

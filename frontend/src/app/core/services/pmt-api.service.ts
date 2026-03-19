@@ -27,10 +27,17 @@ import {
 @Injectable({
   providedIn: 'root',
 })
+/**
+ * Encapsule tous les appels HTTP vers l'API backend PMT.
+ * Le service centralise aussi l'adaptation des objets backend vers les modèles utilisés par le front.
+ */
 export class PmtApiService {
   private readonly http = inject(HttpClient);
   private readonly apiBaseUrl = '/api';
 
+  /**
+   * Retourne tous les utilisateurs disponibles pour l'interface.
+   */
   listUsers(): Observable<User[]> {
     return this.list<User>('users').pipe(map((users) => users.map((user) => this.mapUser(user))));
   }
@@ -173,6 +180,9 @@ export class PmtApiService {
     return this.delete('task-histories', id);
   }
 
+  /**
+   * Effectue un GET simple sur une collection.
+   */
   list<T>(path: string): Observable<T[]> {
     return this.http.get<T[]>(this.buildUrl(path));
   }
@@ -193,6 +203,9 @@ export class PmtApiService {
     return this.http.delete<void>(this.buildUrl(path, id));
   }
 
+  /**
+   * Construit l'URL cible en préfixant systématiquement les appels par `/api`.
+   */
   private buildUrl(path: string, id?: number): string {
     return id === undefined ? `${this.apiBaseUrl}/${path}` : `${this.apiBaseUrl}/${path}/${id}`;
   }
@@ -231,6 +244,9 @@ export class PmtApiService {
     };
   }
 
+  /**
+   * Convertit une tâche backend avec objets liés en identifiants exploitables côté front.
+   */
   private mapTask(payload: unknown): Task {
     const value = payload as {
       id: number;
@@ -277,6 +293,9 @@ export class PmtApiService {
     };
   }
 
+  /**
+   * Convertit une invitation backend complète en modèle frontend allégé.
+   */
   private mapProjectInvitation(payload: unknown): ProjectInvitation {
     const value = payload as {
       id: number;
@@ -306,6 +325,9 @@ export class PmtApiService {
     };
   }
 
+  /**
+   * Convertit la vue publique d'invitation utilisée dans le parcours d'acceptation.
+   */
   private mapProjectInvitationPublic(payload: unknown): ProjectInvitationPublicDetails {
     const value = payload as {
       id: number;

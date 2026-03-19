@@ -15,6 +15,10 @@ import { PmtApiService } from '../../core/services/pmt-api.service';
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login-page.component.html',
 })
+/**
+ * Écran de connexion utilisateur.
+ * Il sait aussi préremplir l'email lorsqu'un parcours d'invitation est en cours.
+ */
 export class LoginPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
@@ -36,6 +40,9 @@ export class LoginPageComponent {
     this.prefillInvitationContext();
   }
 
+  /**
+   * Valide le formulaire puis lance la connexion auprès du backend.
+   */
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -58,6 +65,9 @@ export class LoginPageComponent {
       });
   }
 
+  /**
+   * Indique si un champ doit afficher son message de validation.
+   */
   hasFieldError(fieldName: 'email' | 'password'): boolean {
     const control = this.form.controls[fieldName];
     return control.invalid && control.touched;
@@ -94,6 +104,9 @@ export class LoginPageComponent {
       });
   }
 
+  /**
+   * Traduit les erreurs HTTP ou réseau en messages compréhensibles pour l'utilisateur.
+   */
   private describeError(error: unknown): string {
     if (error instanceof TimeoutError) {
       this.backendStatus.set('Aucune reponse du backend apres 8 secondes.');

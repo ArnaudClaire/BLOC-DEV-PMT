@@ -11,6 +11,9 @@ import { KanbanColumn } from '../../models/dashboard.models';
   templateUrl: './dashboard-kanban-board.component.html',
   styleUrl: './dashboard-kanban-board.component.scss',
 })
+/**
+ * Affiche les tâches sous forme de colonnes Kanban filtrées par projet.
+ */
 export class DashboardKanbanBoardComponent {
   readonly loading = input.required<boolean>();
   readonly projectsCount = input.required<number>();
@@ -20,10 +23,16 @@ export class DashboardKanbanBoardComponent {
 
   readonly taskSelected = output<number>();
 
+  /**
+   * Stabilise le rendu des colonnes dans les boucles Angular.
+   */
   trackByColumn(_: number, column: KanbanColumn): string {
     return column.key;
   }
 
+  /**
+   * Convertit la priorité technique en libellé lisible dans les cartes Kanban.
+   */
   priorityLabel(priority: string): string {
     switch (priority) {
       case 'HIGH':
