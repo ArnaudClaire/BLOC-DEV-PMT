@@ -3,6 +3,13 @@ package com.mooc.formulaone.controllers;
 import com.mooc.formulaone.controllers.dto.UserCreateRequest;
 import com.mooc.formulaone.models.User;
 import com.mooc.formulaone.services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +26,10 @@ import java.util.List;
 /**
  * Expose les endpoints REST de gestion des utilisateurs.
  */
+@Tag(
+        name = "Utilisateurs",
+        description = "Gestion des comptes utilisateurs PMT : consultation, création et suppression."
+)
 public class UserController {
 
     private final UserService userService;
@@ -34,6 +45,11 @@ public class UserController {
      */
     @GetMapping("/users")
     @ResponseStatus(code = HttpStatus.OK)
+    @Operation(
+            summary = "Lister les utilisateurs",
+            description = "Retourne l'ensemble des comptes connus par l'application. Cet endpoint alimente notamment les sélecteurs d'assignation."
+    )
+    @ApiResponse(responseCode = "200", description = "Liste des utilisateurs récupérée avec succès.")
     public List<User> findAll() {
         return userService.findAll();
     }
@@ -46,7 +62,18 @@ public class UserController {
      */
     @GetMapping("/users/{id}")
     @ResponseStatus(code = HttpStatus.OK)
-    public User findById(@PathVariable Long id) {
+    @Operation(
+            summary = "Récupérer un utilisateur",
+            description = "Retourne le détail d'un utilisateur à partir de son identifiant technique."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Utilisateur trouvé."),
+            @ApiResponse(responseCode = "404", description = "Utilisateur introuvable.")
+    })
+    public User findById(
+            @Parameter(description = "Identifiant technique de l'utilisateur.", example = "1")
+            @PathVariable Long id
+    ) {
         return userService.findById(id);
     }
 
@@ -58,6 +85,28 @@ public class UserController {
      */
     @PostMapping("/users")
     @ResponseStatus(code = HttpStatus.CREATED)
+    @Operation(
+            summary = "Créer un utilisateur",
+            description = "Crée un nouveau compte utilisateur. Le mot de passe brut est transmis au backend puis encodé dans la couche service."
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Informations de création d'un compte utilisateur.",
+            required = true,
+            content = @Content(examples = @ExampleObject(
+                    name = "Création standard",
+                    value = """
+                            {
+                              "username": "Alice Martin",
+                              "email": "alice@pmt.fr",
+                              "password": "MotDePasse123!"
+                            }
+                            """
+            ))
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Utilisateur créé."),
+            @ApiResponse(responseCode = "400", description = "Données invalides ou email déjà utilisé.")
+    })
     public Long create(@Valid @RequestBody UserCreateRequest request) {
         User user = new User();
         user.setUsername(request.username());
@@ -73,7 +122,18 @@ public class UserController {
      */
     @DeleteMapping("/users/{id}")
     @ResponseStatus(code = HttpStatus.OK)
-    public void delete(@PathVariable Long id) {
+    @Operation(
+            summary = "Supprimer un utilisateur",
+            description = "Supprime définitivement un compte existant à partir de son identifiant."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Utilisateur supprimé."),
+            @ApiResponse(responseCode = "404", description = "Utilisateur introuvable.")
+    })
+    public void delete(
+            @Parameter(description = "Identifiant de l'utilisateur à supprimer.", example = "3")
+            @PathVariable Long id
+    ) {
         User user = userService.findById(id);
         userService.delete(user);
     }

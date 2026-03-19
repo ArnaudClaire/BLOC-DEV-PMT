@@ -5,6 +5,13 @@ import com.mooc.formulaone.models.ProjectMember;
 import com.mooc.formulaone.services.ProjectService;
 import com.mooc.formulaone.services.ProjectMemberService;
 import com.mooc.formulaone.services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,6 +29,10 @@ import java.sql.Timestamp;
 /**
  * Expose les endpoints REST de gestion des membres de projet.
  */
+@Tag(
+        name = "Membres de projet",
+        description = "Gestion des rattachements entre utilisateurs et projets avec leurs rôles associés."
+)
 public class ProjectMemberController {
 
     private final ProjectMemberService projectMemberService;
@@ -45,6 +56,8 @@ public class ProjectMemberController {
      */
     @GetMapping("/project-members")
     @ResponseStatus(code = HttpStatus.OK)
+    @Operation(summary = "Lister les membres de projet", description = "Retourne toutes les associations projet/utilisateur connues par le backend.")
+    @ApiResponse(responseCode = "200", description = "Membres récupérés avec succès.")
     public List<ProjectMember> findAll() {
         return projectMemberService.findAll();
     }
@@ -57,7 +70,15 @@ public class ProjectMemberController {
      */
     @GetMapping("/project-members/{id}")
     @ResponseStatus(code = HttpStatus.OK)
-    public ProjectMember findById(@PathVariable Long id) {
+    @Operation(summary = "Récupérer un membre de projet", description = "Retourne une association projet/utilisateur à partir de son identifiant.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Association trouvée."),
+            @ApiResponse(responseCode = "404", description = "Association introuvable.")
+    })
+    public ProjectMember findById(
+            @Parameter(description = "Identifiant de l'association membre.", example = "5")
+            @PathVariable Long id
+    ) {
         return projectMemberService.findById(id);
     }
 
@@ -69,6 +90,30 @@ public class ProjectMemberController {
      */
     @PostMapping("/project-members")
     @ResponseStatus(code = HttpStatus.CREATED)
+    @Operation(
+            summary = "Créer un membre de projet",
+            description = "Rattache un utilisateur à un projet avec un rôle donné. Cet endpoint reste utile pour les scénarios internes ou les migrations."
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Association projet/utilisateur à créer.",
+            required = true,
+            content = @Content(examples = @ExampleObject(
+                    name = "Ajout manuel",
+                    value = """
+                            {
+                              "role": "MEMBER",
+                              "joinedAt": "2026-03-19T09:00:00Z",
+                              "projectId": 12,
+                              "userId": 4
+                            }
+                            """
+            ))
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Membre créé."),
+            @ApiResponse(responseCode = "400", description = "Données invalides."),
+            @ApiResponse(responseCode = "404", description = "Projet ou utilisateur introuvable.")
+    })
     public Long create(@Valid @RequestBody ProjectMemberCreateRequest request) {
         ProjectMember projectMember = new ProjectMember();
         projectMember.setRole(request.role());
@@ -87,7 +132,15 @@ public class ProjectMemberController {
      */
     @DeleteMapping("/project-members/{id}")
     @ResponseStatus(code = HttpStatus.OK)
-    public void delete(@PathVariable Long id) {
+    @Operation(summary = "Supprimer un membre de projet", description = "Supprime une association existante entre un utilisateur et un projet.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Association supprimée."),
+            @ApiResponse(responseCode = "404", description = "Association introuvable.")
+    })
+    public void delete(
+            @Parameter(description = "Identifiant de l'association à supprimer.", example = "5")
+            @PathVariable Long id
+    ) {
         ProjectMember projectMember = projectMemberService.findById(id);
         projectMemberService.delete(projectMember);
     }
