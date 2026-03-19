@@ -206,6 +206,11 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
         projectInvitationRepository.delete(projectInvitation);
     }
 
+    /**
+     * Vérifie qu'une invitation peut être créée pour le projet et l'adresse demandés.
+     *
+     * @param projectInvitation invitation en cours de création
+     */
     private void validateInvitationCreation(ProjectInvitation projectInvitation) {
         if (projectInvitation.getProject() == null || projectInvitation.getProject().getId() == null) {
             throw new BadRequestException("Le projet cible est obligatoire.");
@@ -231,6 +236,12 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
         }
     }
 
+    /**
+     * Contrôle que l'utilisateur courant dispose d'un rôle administrateur sur le projet.
+     *
+     * @param project projet concerné par l'action
+     * @param userId identifiant de l'utilisateur à vérifier
+     */
     private void ensureProjectAdmin(Project project, Long userId) {
         boolean isOwner = project.getOwner() != null && project.getOwner().getId() != null && project.getOwner().getId().equals(userId);
         boolean isAdminMember = projectMemberRepository.findByProjectIdAndUserIdAndRole(project.getId(), userId, ProjectRole.ADMIN).isPresent();
@@ -240,6 +251,12 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
         }
     }
 
+    /**
+     * Expire automatiquement une invitation encore en attente lorsqu'elle a dépassé sa date limite.
+     *
+     * @param invitation invitation à contrôler
+     * @return l'invitation mise à jour si son statut a changé
+     */
     private ProjectInvitation refreshExpirationIfNeeded(ProjectInvitation invitation) {
         if (invitation.getStatus() == InvitationStatus.PENDING
                 && invitation.getExpiresAt() != null
@@ -251,6 +268,12 @@ public class ProjectInvitationServiceImpl implements ProjectInvitationService {
         return invitation;
     }
 
+    /**
+     * Normalise une adresse email pour fiabiliser les comparaisons métier.
+     *
+     * @param email adresse brute reçue depuis le front ou la base
+     * @return l'adresse nettoyée en minuscules
+     */
     private String normalizeEmail(String email) {
         return email == null ? "" : email.trim().toLowerCase();
     }

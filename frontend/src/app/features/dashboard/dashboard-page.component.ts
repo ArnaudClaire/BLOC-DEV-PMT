@@ -315,6 +315,9 @@ export class DashboardPageComponent {
     ];
   });
 
+  /**
+   * Retourne le libellé français d'un rôle projet.
+   */
   roleLabel(role: MemberRole | null | string | undefined): string {
     switch (role) {
       case 'ADMIN':
@@ -328,6 +331,9 @@ export class DashboardPageComponent {
     }
   }
 
+  /**
+   * Traduit la priorité technique d'une tâche pour l'affichage.
+   */
   priorityLabel(priority: TaskPriority | string | undefined): string {
     switch (priority) {
       case 'HIGH':
@@ -341,6 +347,9 @@ export class DashboardPageComponent {
     }
   }
 
+  /**
+   * Traduit le statut d'une tâche en libellé lisible dans l'interface.
+   */
   statusLabel(status: TaskStatus | string | undefined): string {
     switch (status) {
       case 'TODO':
@@ -354,6 +363,9 @@ export class DashboardPageComponent {
     }
   }
 
+  /**
+   * Formate le statut métier d'une invitation projet.
+   */
   invitationStatusLabel(status: string | undefined): string {
     switch (status) {
       case 'PENDING':
@@ -371,6 +383,9 @@ export class DashboardPageComponent {
     }
   }
 
+  /**
+   * Formate le type d'action stocké dans l'historique des tâches.
+   */
   historyActionLabel(actionType: string | undefined): string {
     switch (actionType) {
       case 'CREATED':
@@ -388,6 +403,9 @@ export class DashboardPageComponent {
     }
   }
 
+  /**
+   * Formate le nom du champ modifié dans l'historique.
+   */
   historyFieldLabel(fieldName: string | undefined): string {
     switch (fieldName) {
       case 'title':
@@ -411,21 +429,33 @@ export class DashboardPageComponent {
     }
   }
 
+  /**
+   * Charge immédiatement les données nécessaires à l'ouverture du dashboard.
+   */
   constructor() {
     this.loadData();
   }
 
+  /**
+   * Change le projet actif puis resynchronise les formulaires dépendants.
+   */
   selectProject(projectId: number | 'all'): void {
     this.selectedProjectId.set(projectId);
     this.selectedTaskId.set(null);
     this.syncFormsWithSelection();
   }
 
+  /**
+   * Ferme la modale de détail de tâche et réinitialise son formulaire.
+   */
   closeTaskDetails(): void {
     this.selectedTaskId.set(null);
     this.patchTaskDetailForm();
   }
 
+  /**
+   * Ouvre la modale de détail pour une tâche accessible à l'utilisateur courant.
+   */
   openTaskDetails(taskId: number): void {
     if (!this.canViewTaskDetails()) {
       return;
@@ -436,12 +466,18 @@ export class DashboardPageComponent {
   }
 
   @HostListener('document:keydown.escape')
+  /**
+   * Permet de fermer la modale de détail via la touche Échap.
+   */
   handleEscapeKey(): void {
     if (this.selectedTask()) {
       this.closeTaskDetails();
     }
   }
 
+  /**
+   * Crée un projet au nom de l'utilisateur courant puis recharge le dashboard.
+   */
   createProject(): void {
     if (!this.canCreateProjects()) {
       this.errorMessage.set('Votre rôle actuel ne permet pas de créer un projet.');
@@ -475,6 +511,9 @@ export class DashboardPageComponent {
     });
   }
 
+  /**
+   * Crée une tâche et enchaîne l'historique ainsi que la notification d'assignation.
+   */
   createTask(): void {
     if (this.taskForm.invalid) {
       this.taskForm.markAllAsTouched();
@@ -521,6 +560,9 @@ export class DashboardPageComponent {
     });
   }
 
+  /**
+   * Envoie une invitation par email pour le projet actuellement sélectionné.
+   */
   createProjectInvitation(): void {
     const selectedProject = this.selectedProject();
     if (!selectedProject || !this.canManageMembers()) {
@@ -575,6 +617,9 @@ export class DashboardPageComponent {
     });
   }
 
+  /**
+   * Relance une invitation existante avec un nouveau lien d'accès.
+   */
   resendProjectInvitation(invitationId: number): void {
     if (!this.canManageMembers()) {
       return;
@@ -593,6 +638,9 @@ export class DashboardPageComponent {
     });
   }
 
+  /**
+   * Annule une invitation encore en attente sur le projet actif.
+   */
   cancelProjectInvitation(invitationId: number): void {
     if (!this.canManageMembers()) {
       return;
@@ -611,6 +659,9 @@ export class DashboardPageComponent {
     });
   }
 
+  /**
+   * Sauvegarde les modifications de la tâche ouverte puis referme la modale au succès.
+   */
   updateSelectedTask(): void {
     const selectedTask = this.selectedTask();
     if (!selectedTask) {
@@ -669,6 +720,9 @@ export class DashboardPageComponent {
     });
   }
 
+  /**
+   * Recharge l'ensemble des agrégats du dashboard depuis l'API.
+   */
   loadData(): void {
     this.loading.set(true);
     this.errorMessage.set(null);
@@ -752,6 +806,9 @@ export class DashboardPageComponent {
     });
   }
 
+  /**
+   * Calcule l'ensemble des projets visibles selon la propriété et l'appartenance projet.
+   */
   private visibleProjectIds(): Set<number> {
     const userId = this.currentUser().id;
     const visibleProjectIds = new Set<number>();
@@ -771,6 +828,9 @@ export class DashboardPageComponent {
     return visibleProjectIds;
   }
 
+  /**
+   * Réconcilie la sélection courante après chaque rechargement de données.
+   */
   private ensureSelections(): void {
     const projects = this.projects();
     const selectedProjectId = this.selectedProjectId();
@@ -800,6 +860,9 @@ export class DashboardPageComponent {
     this.patchTaskDetailForm();
   }
 
+  /**
+   * Aligne le formulaire de création de tâche sur le projet actuellement exploitable.
+   */
   private syncFormsWithSelection(): void {
     const selectedProject = this.selectedProject();
     const manageableProject = selectedProject && this.canManageTasksForProject(selectedProject.id)
@@ -814,6 +877,9 @@ export class DashboardPageComponent {
     }, { emitEvent: false });
   }
 
+  /**
+   * Injecte la tâche sélectionnée dans le formulaire de détail ou le réinitialise.
+   */
   private patchTaskDetailForm(): void {
     const task = this.selectedTask();
     if (!task) {
@@ -840,6 +906,9 @@ export class DashboardPageComponent {
     }, { emitEvent: false });
   }
 
+  /**
+   * Exécute les écritures secondaires liées à une tâche : historique et notification.
+   */
   private runPostTaskOperations(
     taskId: number,
     historyPayloads: Array<CreateTaskHistoryPayload | null>,
@@ -859,6 +928,9 @@ export class DashboardPageComponent {
     return operations.length > 0 ? forkJoin(operations) : of([]);
   }
 
+  /**
+   * Construit la liste des entrées d'historique à produire après une mise à jour.
+   */
   private buildUpdateHistoryPayloads(task: Task, payload: UpdateTaskPayload): CreateTaskHistoryPayload[] {
     const historyPayloads: Array<CreateTaskHistoryPayload | null> = [
       this.buildChangedHistory(task.title, payload.title, 'UPDATED', 'title', task.id),
@@ -889,6 +961,9 @@ export class DashboardPageComponent {
     return historyPayloads.filter((payloadItem): payloadItem is CreateTaskHistoryPayload => payloadItem !== null);
   }
 
+  /**
+   * Retourne une entrée d'historique uniquement lorsqu'une valeur a réellement changé.
+   */
   private buildChangedHistory(
     previousValue: string | undefined | null,
     nextValue: string | undefined | null,
@@ -912,6 +987,9 @@ export class DashboardPageComponent {
     );
   }
 
+  /**
+   * Prépare le payload normalisé envoyé à l'API d'historique des tâches.
+   */
   private buildHistoryPayload(
     actionType: CreateTaskHistoryPayload['actionType'],
     fieldName: string,
@@ -929,6 +1007,9 @@ export class DashboardPageComponent {
     };
   }
 
+  /**
+   * Prépare la notification d'assignation ou de réassignation d'une tâche.
+   */
   private buildNotificationPayload(
     userId: number,
     taskId: number | undefined,
@@ -945,6 +1026,9 @@ export class DashboardPageComponent {
     };
   }
 
+  /**
+   * Enrichit une tâche brute avec les libellés attendus par la vue Kanban.
+   */
   private toTaskCardView(task: Task): TaskCardView {
     const project = this.projects().find((candidate) => candidate.id === task.projectId);
     const assignee = task.assignedToId ? this.allUsers().find((candidate) => candidate.id === task.assignedToId) : null;
@@ -957,6 +1041,9 @@ export class DashboardPageComponent {
     };
   }
 
+  /**
+   * Résout le rôle effectif de l'utilisateur courant sur un projet donné.
+   */
   private resolveRoleForProject(projectId: number): MemberRole | null {
     const project = this.allProjects().find((candidate) => candidate.id === projectId);
     if (project?.ownerId === this.currentUser().id) {
@@ -970,11 +1057,17 @@ export class DashboardPageComponent {
     return (projectMember?.role as MemberRole | undefined) ?? null;
   }
 
+  /**
+   * Indique si le rôle courant autorise la création et l'édition de tâches.
+   */
   private canManageTasksForProject(projectId: number): boolean {
     const role = this.resolveRoleForProject(projectId);
     return role === 'ADMIN' || role === 'MEMBER';
   }
 
+  /**
+   * Retourne les utilisateurs assignables sur un projet en incluant le propriétaire.
+   */
   private usersForProject(projectId: number): User[] {
     const userIds = new Set<number>();
     const project = this.allProjects().find((candidate) => candidate.id === projectId);
@@ -990,6 +1083,9 @@ export class DashboardPageComponent {
     return this.allUsers().filter((user) => userIds.has(user.id));
   }
 
+  /**
+   * Vérifie qu'un utilisateur appartient bien au projet ciblé avant assignation.
+   */
   private userIsAssignableToProject(projectId: number | undefined, userId: number): boolean {
     if (!projectId || userId <= 0) {
       return false;
@@ -998,6 +1094,9 @@ export class DashboardPageComponent {
     return this.usersForProject(projectId).some((user) => user.id === userId);
   }
 
+  /**
+   * Retourne le nom lisible d'un utilisateur pour l'historique et les notifications.
+   */
   private userLabel(userId: number | undefined): string | null {
     if (!userId) {
       return null;
@@ -1006,6 +1105,9 @@ export class DashboardPageComponent {
     return this.allUsers().find((user) => user.id === userId)?.username ?? `Utilisateur #${userId}`;
   }
 
+  /**
+   * Construit la liste de membres d'un projet en garantissant la présence du propriétaire.
+   */
   private projectMembersFor(projectId: number): ProjectMemberView[] {
     const membersByUser = new Map<number, ProjectMemberView>();
     const project = this.allProjects().find((candidate) => candidate.id === projectId);
@@ -1047,10 +1149,16 @@ export class DashboardPageComponent {
     });
   }
 
+  /**
+   * Tronque une date ISO au format attendu par les champs `date` HTML.
+   */
   private normalizeDate(value?: string): string {
     return value ? value.slice(0, 10) : '';
   }
 
+  /**
+   * Formate une date simple pour les cartes et résumés du dashboard.
+   */
   private formatDate(value?: string): string {
     if (!value) {
       return 'Aucune date';
@@ -1059,6 +1167,9 @@ export class DashboardPageComponent {
     return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(value));
   }
 
+  /**
+   * Formate une date/heure complète pour les invitations, notifications et historiques.
+   */
   private formatDateTime(value?: string): string {
     if (!value) {
       return 'À l’instant';
@@ -1070,12 +1181,18 @@ export class DashboardPageComponent {
     }).format(new Date(value));
   }
 
+  /**
+   * Compare deux dates sérialisées afin de trier les listes récentes en premier.
+   */
   private compareDates(left?: string, right?: string): number {
     const leftTime = left ? new Date(left).getTime() : 0;
     const rightTime = right ? new Date(right).getTime() : 0;
     return leftTime - rightTime;
   }
 
+  /**
+   * Uniformise les erreurs HTTP et JavaScript en message exploitable par l'UI.
+   */
   private formatError(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
       return error.error?.message ?? `Le backend a répondu avec le statut ${error.status}.`;
@@ -1088,6 +1205,9 @@ export class DashboardPageComponent {
     return 'Une erreur inattendue est survenue.';
   }
 
+  /**
+   * Réinitialise le formulaire de création de tâche en conservant le projet actif.
+   */
   private resetTaskForm(projectId: number): void {
     this.taskForm.reset({
       title: '',
