@@ -158,7 +158,7 @@ test('shows validation messages on empty registration form', async ({ page }) =>
 
   await expect(page.getByText("Le nom d'utilisateur est requis.")).toBeVisible();
   await expect(page.getByText('Entre une adresse email valide.')).toBeVisible();
-  await expect(page.getByText('Le mot de passe doit contenir au moins 6 caracteres.')).toBeVisible();
+  await expect(page.getByText(/Le mot de passe doit contenir au moins 6 caract/i)).toBeVisible();
 });
 
 test('registers a user and redirects to the dashboard', async ({ page }) => {
@@ -170,8 +170,8 @@ test('registers a user and redirects to the dashboard', async ({ page }) => {
   await page.getByTestId('register-submit').click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByText('Projet E2E')).toBeVisible();
-  await expect(page.getByText('Verifier inscription')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Projet E2E' })).toBeVisible();
+  await expect(page.getByText('Verifier inscription', { exact: true })).toBeVisible();
 });
 
 test('prefills invited email and allows joining the project after registration', async ({ page }) => {
@@ -201,5 +201,5 @@ test('prefills invited email and allows joining the project after registration',
   await page.getByRole('button', { name: 'Rejoindre le projet' }).click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByText('Projet Invitation')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Projet Invitation' })).toBeVisible();
 });
