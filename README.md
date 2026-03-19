@@ -436,6 +436,7 @@ Cette variable sert au proxy Nginx pour les appels `/api`.
 ## Documentation
 
 - Collection Postman : `docs/postman/`
+- Schema BDD versionne : `database/migrations/V1__initial_schema_postgresql.sql`
 - Configuration Docker : `docker-compose.yml`
 - Variables d'environnement d'exemple : `.env.example`
 
