@@ -188,6 +188,135 @@ Notification --> NotificationType
 Notification --> NotificationStatus
 ```
 
+### Schema De Base De Donnees
+
+Le diagramme ci-dessous reprend la structure relationnelle versionnee dans `database/migrations/V1__initial_schema_postgresql.sql`.
+
+```mermaid
+erDiagram
+    USERS {
+        BIGINT id PK
+        VARCHAR username
+        VARCHAR email UK
+        VARCHAR password_hash
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    PROJECTS {
+        BIGINT id PK
+        VARCHAR name
+        VARCHAR description
+        DATE start_date
+        BIGINT owner_id FK
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    PROJECT_MEMBERS {
+        BIGINT id PK
+        VARCHAR role
+        TIMESTAMP joined_at
+        BIGINT project_id FK
+        BIGINT user_id FK
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    PROJECT_INVITATIONS {
+        BIGINT id PK
+        VARCHAR email
+        VARCHAR token UK
+        VARCHAR role
+        VARCHAR status
+        TIMESTAMP expires_at
+        TIMESTAMP accepted_at
+        TIMESTAMP canceled_at
+        BIGINT project_id FK
+        BIGINT invited_by_id FK
+        BIGINT accepted_by_id FK
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    TASK_BOARD_COLUMNS {
+        BIGINT id PK
+        VARCHAR name
+        INTEGER display_order
+        BIGINT project_id FK
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    TASKS {
+        BIGINT id PK
+        VARCHAR title
+        VARCHAR description
+        VARCHAR status
+        VARCHAR priority
+        DATE due_date
+        DATE end_date
+        BIGINT project_id FK
+        BIGINT created_by_id FK
+        BIGINT assigned_to_id FK
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    TASK_HISTORIES {
+        BIGINT id PK
+        VARCHAR action_type
+        VARCHAR field_name
+        VARCHAR old_value
+        VARCHAR new_value
+        BIGINT task_id FK
+        BIGINT changed_by_id FK
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    NOTIFICATIONS {
+        BIGINT id PK
+        VARCHAR type
+        VARCHAR status
+        VARCHAR message
+        TIMESTAMP sent_at
+        BIGINT user_id FK
+        BIGINT task_id FK
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    USERS ||--o{ PROJECTS : owns
+    USERS ||--o{ PROJECT_MEMBERS : joins
+    PROJECTS ||--o{ PROJECT_MEMBERS : contains
+
+    PROJECTS ||--o{ PROJECT_INVITATIONS : has
+    USERS ||--o{ PROJECT_INVITATIONS : sends
+    USERS o|--o{ PROJECT_INVITATIONS : accepts
+
+    PROJECTS ||--o{ TASK_BOARD_COLUMNS : configures
+
+    PROJECTS ||--o{ TASKS : contains
+    USERS ||--o{ TASKS : creates
+    USERS o|--o{ TASKS : is_assigned_to
+
+    TASKS ||--o{ TASK_HISTORIES : logs
+    USERS ||--o{ TASK_HISTORIES : changes
+
+    USERS ||--o{ NOTIFICATIONS : receives
+    TASKS o|--o{ NOTIFICATIONS : triggers
+```
+
+Contraintes importantes de conception :
+
+- `users.email` est unique
+- `project_members (project_id, user_id)` est unique
+- `project_invitations.token` est unique
+- `task_board_columns (project_id, name)` est unique
+- `assigned_to_id`, `accepted_by_id` et `task_id` dans `notifications` sont optionnels
+- les roles et statuts sont controles par des `CHECK`
+
 ### Frontend
 
 - Stack : Angular 19, Nx, TypeScript, SCSS, Tailwind CSS.
