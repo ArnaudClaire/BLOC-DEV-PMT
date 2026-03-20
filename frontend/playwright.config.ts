@@ -4,7 +4,11 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   retries: 0,
-  reporter: 'list',
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+  ],
+  outputDir: 'test-results',
   use: {
     baseURL: 'http://127.0.0.1:4200',
     trace: 'on-first-retry',
