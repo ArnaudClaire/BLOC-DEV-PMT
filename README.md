@@ -191,6 +191,7 @@ Notification --> NotificationStatus
 ### Schéma de base de données
 
 Le diagramme ci-dessous reprend la structure relationnelle versionnée dans `database/migrations/V1__initial_schema_postgresql.sql`.
+Le jeu de données de démonstration associé se trouve dans `database/seeds/demo_data_postgresql.sql`.
 
 ```mermaid
 erDiagram
@@ -452,7 +453,7 @@ Pour vérifier ensuite que le backend compile et que les tests passent :
 - `.\mvnw.cmd test` ne démarre pas le backend Docker
 - `.\mvnw.cmd test` n'a pas besoin que `docker compose` tourne
 - les tests backend utilisent une base H2 en mémoire dans `backend/src/test/resources/`
-- après avoir arrêté `.\start-dev.ps1`, tu peux relancer `.\mvnw.cmd test` dans le même terminal sans écraser la datasource du profil `test`
+- après l'arrêt de `.\start-dev.ps1`, `.\mvnw.cmd test` peut être relancé dans le même terminal sans écraser la datasource du profil `test`
 
 ## Démarrage du projet
 
@@ -498,11 +499,12 @@ npm start
 À retenir :
 
 - cette option ne charge pas automatiquement le fichier `.env` à la racine
-- si tu veux tester les invitations email avec SMTP en démarrage séparé, il faut soit passer par `.\start-dev.ps1`, soit exporter les variables d'environnement manuellement avant de lancer Spring Boot
+- pour tester les invitations email avec SMTP en démarrage séparé, il faut soit passer par `.\start-dev.ps1`, soit exporter les variables d'environnement manuellement avant de lancer Spring Boot
 
 ## Comptes de démo
 
 Au démarrage du backend, 3 comptes de démonstration sont seedés pour tester rapidement la connexion et les rôles de projet.
+Leur équivalent SQL exploitable comme livrable se trouve dans `database/seeds/demo_data_postgresql.sql`.
 
 Mot de passe commun :
 
@@ -570,6 +572,17 @@ Pour lancer la suite Angular en mode CI avec Chrome headless :
 npm run test:unit
 ```
 
+Pour générer un rapport de couverture frontend exploitable pour le rendu :
+
+```powershell
+npm run test:coverage
+```
+
+Les fichiers de preuve à conserver sont :
+
+- `frontend/coverage/index.html`
+- `frontend/coverage/coverage-summary.json`
+
 ### Frontend end-to-end avec Playwright
 
 Depuis `frontend/` :
@@ -622,6 +635,11 @@ Note sur la user story email :
 - le parcours Playwright vérifie bien l'assignation et l'apparition de la notification dans l'application
 - l'envoi d'email lui-même est vérifié côté backend par les tests Java, notamment `backend/src/test/java/com/mooc/formulaone/NotificationServiceImplTest.java`
 
+### Rapports de couverture
+
+- frontend : `frontend/coverage/index.html` et `frontend/coverage/coverage-summary.json`
+- backend : `backend/target/site/jacoco/index.html`
+
 ## CI/CD
 
 Le dépôt contient un workflow GitHub Actions dans [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml).
@@ -668,6 +686,7 @@ Cette variable sert au proxy Nginx pour les appels `/api`.
 
 - Collection Postman : `docs/postman/`
 - Schéma BDD versionné : `database/migrations/V1__initial_schema_postgresql.sql`
+- Données SQL de démonstration : `database/seeds/demo_data_postgresql.sql`
 - Configuration Docker : `docker-compose.yml`
 - Variables d'environnement d'exemple : `.env.example`
 

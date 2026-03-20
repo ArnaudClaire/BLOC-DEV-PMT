@@ -43,7 +43,7 @@ La sécurité backend est désactivée temporairement pour faciliter le dévelop
 
 1. Lancer l'application
 2. Appeler `GET /users`, `GET /projects` et `GET /tasks` pour retrouver les IDs seed
-3. Appeler `POST /auth/login` si tu veux vérifier le flux de connexion frontend/backend
+3. Appeler `POST /auth/login` pour vérifier le flux de connexion frontend/backend
 4. Mettre à jour les variables Postman si nécessaire
 5. Utiliser `POST /users` puis les autres endpoints de création si besoin
 
