@@ -3,6 +3,8 @@ package com.mooc.formulaone.services.impl;
 import com.mooc.formulaone.dao.NotificationRepository;
 import com.mooc.formulaone.exceptions.EntityDontExistException;
 import com.mooc.formulaone.models.Notification;
+import com.mooc.formulaone.models.NotificationType;
+import com.mooc.formulaone.services.NotificationEmailService;
 import com.mooc.formulaone.services.NotificationService;
 import org.springframework.stereotype.Service;
 
@@ -18,9 +20,14 @@ import java.util.Optional;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationEmailService notificationEmailService;
 
-    public NotificationServiceImpl(NotificationRepository notificationRepository) {
+    public NotificationServiceImpl(
+            NotificationRepository notificationRepository,
+            NotificationEmailService notificationEmailService
+    ) {
         this.notificationRepository = notificationRepository;
+        this.notificationEmailService = notificationEmailService;
     }
 
     /**
@@ -59,7 +66,11 @@ public class NotificationServiceImpl implements NotificationService {
      */
     @Override
     public Long create(Notification notification) {
-        return notificationRepository.save(notification).getId();
+        Notification savedNotification = notificationRepository.save(notification);
+        if (savedNotification.getType() == NotificationType.TASK_ASSIGNED) {
+            notificationEmailService.sendTaskAssignmentNotification(savedNotification);
+        }
+        return savedNotification.getId();
     }
 
     /**

@@ -124,6 +124,7 @@ describe('DashboardPageComponent', () => {
       'createProject',
       'createTask',
       'createProjectMember',
+      'updateProjectMember',
       'createProjectInvitation',
       'cancelProjectInvitation',
       'resendProjectInvitation',
@@ -142,6 +143,7 @@ describe('DashboardPageComponent', () => {
     apiSpy.createProject.and.returnValue(of(3));
     apiSpy.createTask.and.returnValue(of(12));
     apiSpy.createProjectMember.and.returnValue(of(202));
+    apiSpy.updateProjectMember.and.returnValue(of(void 0));
     apiSpy.createProjectInvitation.and.returnValue(of(203));
     apiSpy.cancelProjectInvitation.and.returnValue(of(void 0));
     apiSpy.resendProjectInvitation.and.returnValue(of(void 0));
@@ -199,16 +201,42 @@ describe('DashboardPageComponent', () => {
     expect(component.canManageTasks()).toBeTrue();
   });
 
-  it('should restrict an observer to dashboard, notifications and history', async () => {
+  it('should only expose task history for projects visible to the current user', async () => {
+    const { component } = await createComponentFor(1);
+
+    component.selectProject('all');
+
+    expect(component.taskHistories().map((history) => history.id)).toEqual([401]);
+  });
+
+  it('should narrow task history to the selected project when the user has access to several projects', async () => {
+    const { component } = await createComponentFor(2);
+
+    component.selectProject('all');
+    expect(component.taskHistories().map((history) => history.id)).toEqual([401, 402]);
+
+    component.selectProject(1);
+    expect(component.taskHistories().map((history) => history.id)).toEqual([401]);
+
+    component.selectProject(2);
+    expect(component.taskHistories().map((history) => history.id)).toEqual([402]);
+  });
+
+  it('should keep an observer in read-only mode while allowing task details', async () => {
     const { component } = await createComponentFor(3);
 
     expect(component.selectedProject()?.id).toBe(2);
     expect(component.currentProjectRole()).toBe('OBSERVER');
     expect(component.canManageMembers()).toBeFalse();
     expect(component.canManageTasks()).toBeFalse();
-    expect(component.canViewTaskDetails()).toBeFalse();
+    expect(component.canViewTaskDetails()).toBeTrue();
     expect(component.notifications().length).toBe(1);
     expect(component.taskHistories().length).toBe(1);
+
+    component.openTaskDetails(11);
+
+    expect(component.selectedTask()?.id).toBe(11);
+    expect(component.canEditSelectedTask()).toBeFalse();
   });
 
   it('should create a task and record notification plus history', async () => {
@@ -281,5 +309,116 @@ describe('DashboardPageComponent', () => {
       projectId: 1,
       invitedById: 1,
     });
+  });
+
+  it('should update a project member role for admins', async () => {
+    const { component } = await createComponentFor(1);
+
+    component.updateProjectMemberRole(102, 'OBSERVER');
+
+    expect(apiSpy.updateProjectMember).toHaveBeenCalledWith(102, {
+      role: 'OBSERVER',
+      requestedById: 1,
+    });
+  });
+
+  it('should not update a project member role when the role is unchanged', async () => {
+    const { component } = await createComponentFor(1);
+
+    component.updateProjectMemberRole(102, 'MEMBER');
+
+    expect(apiSpy.updateProjectMember).not.toHaveBeenCalled();
+  });
+
+  it('should reject duplicate invitations for existing members', async () => {
+    const { component } = await createComponentFor(1);
+
+    component.invitationForm.setValue({
+      email: 'bob.member@pmt.local',
+      role: 'MEMBER',
+    });
+
+    component.createProjectInvitation();
+
+    expect(component.errorMessage()).toContain('fait déjà partie du projet');
+    expect(apiSpy.createProjectInvitation).not.toHaveBeenCalled();
+  });
+
+  it('should reject duplicate pending invitations for the same email', async () => {
+    const { component } = await createComponentFor(1);
+
+    component.invitationForm.setValue({
+      email: 'new.member@example.com',
+      role: 'MEMBER',
+    });
+
+    component.createProjectInvitation();
+
+    expect(component.errorMessage()).toContain('invitation active existe déjà');
+    expect(apiSpy.createProjectInvitation).not.toHaveBeenCalled();
+  });
+
+  it('should block project creation and task creation for an observer', async () => {
+    const { component } = await createComponentFor(3);
+
+    component.createProject();
+    expect(component.errorMessage()).toContain('ne permet pas de créer un projet');
+    expect(apiSpy.createProject).not.toHaveBeenCalled();
+
+    component.taskForm.setValue({
+      title: 'Tache observateur',
+      description: 'Description suffisamment longue',
+      projectId: 2,
+      priority: 'LOW',
+      status: 'TODO',
+      dueDate: '2026-03-30',
+      assignedToId: 3,
+    });
+    component.createTask();
+
+    expect(component.errorMessage()).toContain('Seuls les admins et membres');
+    expect(apiSpy.createTask).not.toHaveBeenCalled();
+  });
+
+  it('should create a synthetic history entry when an update keeps the same values', async () => {
+    const { component } = await createComponentFor(1);
+    (component as any).allTasks.set([
+      {
+        ...tasks[0],
+        dueDate: '2026-03-20',
+        endDate: '2026-03-20',
+      },
+    ]);
+
+    component.openTaskDetails(10);
+    component.taskDetailForm.patchValue({
+      title: 'Configurer auth',
+      description: 'Brancher la session',
+      priority: 'HIGH',
+      status: 'TODO',
+      dueDate: '2026-03-20',
+      endDate: '2026-03-20',
+      assignedToId: 2,
+    });
+
+    component.updateSelectedTask();
+
+    expect(apiSpy.createTaskHistory).toHaveBeenCalledTimes(1);
+    expect(apiSpy.createTaskHistory).toHaveBeenCalledWith(jasmine.objectContaining({
+      actionType: 'UPDATED',
+      fieldName: 'task',
+    }));
+    expect(apiSpy.createNotification).not.toHaveBeenCalled();
+  });
+
+  it('should expose fallback labels for unknown values', async () => {
+    const { component } = await createComponentFor(1);
+
+    expect(component.roleLabel(undefined)).toBe('Aucun role');
+    expect(component.priorityLabel('CUSTOM')).toBe('CUSTOM');
+    expect(component.statusLabel('CUSTOM')).toBe('CUSTOM');
+    expect(component.invitationStatusLabel('CUSTOM')).toBe('CUSTOM');
+    expect(component.historyActionLabel('CUSTOM')).toBe('CUSTOM');
+    expect(component.historyFieldLabel(undefined)).toBe('champ global');
   });
 });

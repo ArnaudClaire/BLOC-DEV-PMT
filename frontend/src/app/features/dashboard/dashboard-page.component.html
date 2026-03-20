@@ -61,7 +61,7 @@
           <form class="stack-form" [formGroup]="invitationForm" (ngSubmit)="createProjectInvitation()">
             <label>
               <span>Adresse email</span>
-              <input formControlName="email" type="email" placeholder="membre@exemple.com" />
+              <input formControlName="email" type="email" placeholder="membre@exemple.com" data-testid="invitation-email" />
             </label>
             @if (invitationForm.controls.email.invalid && invitationForm.controls.email.touched) {
               <p class="message error">Entre une adresse email valide pour envoyer l'invitation.</p>
@@ -69,14 +69,14 @@
 
             <label>
               <span>Rôle attribué à l'arrivée</span>
-              <select formControlName="role">
+              <select formControlName="role" data-testid="invitation-role">
                 @for (role of memberRoles; track role) {
                   <option [value]="role">{{ roleLabel(role) }}</option>
                 }
               </select>
             </label>
 
-            <button class="primary-button" type="submit" [disabled]="savingInvitation()">
+            <button class="primary-button" type="submit" [disabled]="savingInvitation()" data-testid="invitation-submit">
               {{ savingInvitation() ? 'Envoi...' : "Envoyer l'invitation" }}
             </button>
           </form>
@@ -86,7 +86,7 @@
               <p class="empty-panel">Aucune invitation envoyée pour ce projet.</p>
             } @else {
               @for (invitation of currentProjectInvitations(); track invitation.id) {
-                <article class="member-row invitation-row">
+                <article class="member-row invitation-row" [attr.data-testid]="'invitation-row-' + invitation.id">
                   <div>
                     <strong>{{ invitation.email }}</strong>
                     <p>{{ roleLabel(invitation.role) }} • Expire le {{ invitation.expiresAtLabel }}</p>
@@ -127,14 +127,32 @@
 
           <div class="member-list">
             @for (member of currentProjectMembers(); track member.displayId) {
-              <article class="member-row">
+              <article class="member-row" [attr.data-testid]="'member-row-' + member.id">
                 <div>
                   <strong>{{ member.username }}</strong>
                   <p>{{ member.email }}</p>
                 </div>
-                <span class="role-pill" [attr.data-role]="member.role">
-                  {{ member.isOwner ? 'Proprietaire / administrateur' : roleLabel(member.role) }}
-                </span>
+                @if (member.isOwner) {
+                  <span class="role-pill" [attr.data-role]="member.role">
+                    Proprietaire / administrateur
+                  </span>
+                } @else {
+                  <div class="invitation-actions">
+                    <select
+                      [value]="member.role"
+                      [disabled]="updatingMemberRoleId() === member.id"
+                      (change)="updateProjectMemberRole(member.id, $any($event.target).value)"
+                      [attr.data-testid]="'member-role-' + member.id"
+                    >
+                      @for (role of memberRoles; track role) {
+                        <option [value]="role">{{ roleLabel(role) }}</option>
+                      }
+                    </select>
+                    <span class="role-pill" [attr.data-role]="member.role">
+                      {{ roleLabel(member.role) }}
+                    </span>
+                  </div>
+                }
               </article>
             }
           </div>
@@ -166,7 +184,7 @@
       />
 
       <div class="insights-grid">
-        @if (!canViewTaskDetails()) {
+        @if (!canManageTasks()) {
           <section class="panel-card panel-note">
             <div class="panel-head">
               <h2>Consultation seule</h2>
@@ -189,7 +207,7 @@
           } @else {
             <div class="activity-list">
               @for (notification of notifications(); track notification.id) {
-                <article class="activity-row">
+                <article class="activity-row" [attr.data-testid]="'notification-' + notification.id">
                   <div>
                     <strong>{{ notification.taskTitle }}</strong>
                     <p>{{ notification.message }}</p>
@@ -213,7 +231,7 @@
           } @else {
             <div class="activity-list">
               @for (history of taskHistories(); track history.id) {
-                <article class="activity-row">
+                <article class="activity-row" [attr.data-testid]="'history-' + history.id">
                   <div>
                     <strong>{{ history.taskTitle }}</strong>
                     <p>{{ historyActionLabel(history.actionType) }} - {{ historyFieldLabel(history.fieldName) }}</p>
@@ -237,6 +255,7 @@
         aria-modal="true"
         aria-labelledby="task-modal-title"
         (click)="$event.stopPropagation()"
+        data-testid="task-details-modal"
       >
         <div class="task-modal-glow glow-cyan"></div>
         <div class="task-modal-glow glow-blue"></div>
@@ -287,18 +306,18 @@
           <form class="stack-form task-modal-form" [formGroup]="taskDetailForm" (ngSubmit)="updateSelectedTask()">
             <label>
               <span>Titre</span>
-              <input formControlName="title" type="text" />
+              <input formControlName="title" type="text" data-testid="task-detail-title" />
             </label>
 
             <label>
               <span>Description</span>
-              <textarea formControlName="description" rows="4"></textarea>
+              <textarea formControlName="description" rows="4" data-testid="task-detail-description"></textarea>
             </label>
 
             <div class="two-columns">
               <label>
                 <span>Priorité</span>
-                <select formControlName="priority">
+                <select formControlName="priority" data-testid="task-detail-priority">
                   @for (priority of priorities; track priority) {
                     <option [value]="priority">{{ priorityLabel(priority) }}</option>
                   }
@@ -307,7 +326,7 @@
 
               <label>
                 <span>Statut</span>
-                <select formControlName="status">
+                <select formControlName="status" data-testid="task-detail-status">
                   @for (status of statuses; track status) {
                     <option [value]="status">{{ statusLabel(status) }}</option>
                   }
@@ -318,18 +337,18 @@
             <div class="two-columns">
               <label>
                 <span>Échéance</span>
-                <input formControlName="dueDate" type="date" />
+                <input formControlName="dueDate" type="date" data-testid="task-detail-due-date" />
               </label>
 
               <label>
                 <span>Fin</span>
-                <input formControlName="endDate" type="date" />
+                <input formControlName="endDate" type="date" data-testid="task-detail-end-date" />
               </label>
             </div>
 
             <label>
               <span>Assigné à</span>
-              <select formControlName="assignedToId">
+              <select formControlName="assignedToId" data-testid="task-detail-assignee">
                 <option [ngValue]="0">Aucun membre</option>
                 @for (member of selectedTaskMembers(); track member.displayId) {
                   <option [ngValue]="member.userId">{{ member.username }}</option>
@@ -339,13 +358,13 @@
 
             <div class="task-modal-actions">
               <button class="ghost-button" type="button" (click)="closeTaskDetails()">Fermer</button>
-              <button class="primary-button dark" type="submit" [disabled]="savingTaskUpdate()">
+              <button class="primary-button dark" type="submit" [disabled]="savingTaskUpdate()" data-testid="task-detail-submit">
                 {{ savingTaskUpdate() ? 'Mise à jour...' : 'Mettre à jour la tâche' }}
               </button>
             </div>
           </form>
         } @else {
-          <p class="empty-panel">
+          <p class="empty-panel" data-testid="task-detail-readonly">
             Cette tâche est visible, mais votre rôle actuel ne permet pas de la modifier.
           </p>
         }

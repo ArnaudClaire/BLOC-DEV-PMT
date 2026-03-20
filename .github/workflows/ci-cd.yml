@@ -72,7 +72,14 @@ jobs:
       - name: Run frontend unit tests
         env:
           CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
-        run: npx nx run PMT-Frontend:test --watch=false --browsers=ChromeHeadlessCI
+        run: npx nx run PMT-Frontend:test --watch=false --browsers=ChromeHeadlessCI --code-coverage
+
+      - name: Upload frontend coverage
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
 
       - name: Build frontend
         run: npm run build

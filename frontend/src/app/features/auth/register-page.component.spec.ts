@@ -4,7 +4,8 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { TimeoutError, of, throwError } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
 import { PmtApiService } from '../../core/services/pmt-api.service';
@@ -88,5 +89,37 @@ describe('RegisterPageComponent', () => {
 
     expect(component.errorMessage()).toContain('Inscription impossible');
     expect(component.isSubmitting()).toBeFalse();
+  });
+
+  it('should expose a timeout message when registration takes too long', () => {
+    authServiceSpy.register.and.returnValue(throwError(() => new TimeoutError()));
+    component.form.setValue({
+      username: 'alice',
+      email: 'alice@example.com',
+      password: 'secret123',
+    });
+
+    component.submit();
+
+    expect(component.errorMessage()).toContain("Le backend ne repond pas");
+    expect(component.backendStatus()).toContain('8 secondes');
+    expect(component.isSubmitting()).toBeFalse();
+  });
+
+  it('should display backend string errors for HTTP registration failures', () => {
+    authServiceSpy.register.and.returnValue(throwError(() => new HttpErrorResponse({
+      status: 409,
+      error: 'email deja utilise',
+    })));
+    component.form.setValue({
+      username: 'alice',
+      email: 'alice@example.com',
+      password: 'secret123',
+    });
+
+    component.submit();
+
+    expect(component.errorMessage()).toBe('Inscription impossible: email deja utilise');
+    expect(component.backendStatus()).toContain('Erreur HTTP 409');
   });
 });

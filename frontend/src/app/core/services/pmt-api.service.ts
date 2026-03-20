@@ -20,6 +20,7 @@ import {
   ProjectMember,
   Task,
   TaskHistory,
+  UpdateProjectMemberPayload,
   UpdateTaskPayload,
   User,
 } from '../models/api.models';
@@ -104,6 +105,10 @@ export class PmtApiService {
 
   createProjectMember(payload: CreateProjectMemberPayload): Observable<number> {
     return this.create<number>('project-members', payload);
+  }
+
+  updateProjectMember(id: number, payload: UpdateProjectMemberPayload): Observable<void> {
+    return this.put<void>('project-members', id, payload);
   }
 
   deleteProjectMember(id: number): Observable<void> {

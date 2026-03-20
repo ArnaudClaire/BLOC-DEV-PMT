@@ -5,7 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { TimeoutError, of, throwError } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
 import { PmtApiService } from '../../core/services/pmt-api.service';
@@ -89,5 +89,47 @@ describe('LoginPageComponent', () => {
     component.submit();
 
     expect(component.errorMessage()).toBe('Identifiant ou mot de passe incorrect.');
+  });
+
+  it('should expose a timeout message when the backend does not reply', () => {
+    authServiceSpy.login.and.returnValue(throwError(() => new TimeoutError()));
+    component.form.setValue({
+      email: 'alice@example.com',
+      password: 'secret123',
+    });
+
+    component.submit();
+
+    expect(component.backendStatus()).toContain('8 secondes');
+    expect(component.errorMessage()).toContain('backend ne repond pas');
+  });
+
+  it('should display backend string errors for unexpected HTTP statuses', () => {
+    authServiceSpy.login.and.returnValue(throwError(() => new HttpErrorResponse({
+      status: 500,
+      error: 'database offline',
+    })));
+    component.form.setValue({
+      email: 'alice@example.com',
+      password: 'secret123',
+    });
+
+    component.submit();
+
+    expect(component.errorMessage()).toBe('Connexion impossible: database offline');
+    expect(component.backendStatus()).toContain('Erreur HTTP 500');
+  });
+
+  it('should map credential-like runtime errors to the invalid credentials message', () => {
+    authServiceSpy.login.and.returnValue(throwError(() => new Error('identifiant inconnu')));
+    component.form.setValue({
+      email: 'alice@example.com',
+      password: 'secret123',
+    });
+
+    component.submit();
+
+    expect(component.errorMessage()).toBe('Identifiant ou mot de passe incorrect.');
+    expect(component.backendStatus()).toContain('identifiants');
   });
 });

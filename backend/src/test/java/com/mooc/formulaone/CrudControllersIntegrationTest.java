@@ -297,6 +297,35 @@ class CrudControllersIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void shouldUpdateProjectMemberRoleThroughApi() throws Exception {
+        Long ownerId = createUser("owner-role", "owner-role@example.com");
+        Long memberUserId = createUser("member-role", "member-role@example.com");
+        Long projectId = createProject(ownerId, "Roles");
+
+        com.mooc.formulaone.models.ProjectMember projectMember = new com.mooc.formulaone.models.ProjectMember();
+        projectMember.setRole(ProjectRole.MEMBER);
+        projectMember.setProject(projectService.findById(projectId));
+        projectMember.setUser(userService.findById(memberUserId));
+        Long memberId = projectMemberService.create(projectMember);
+
+        String updateJson = """
+                {
+                  "role": "OBSERVER",
+                  "requestedById": %d
+                }
+                """.formatted(ownerId);
+
+        mockMvc.perform(put("/project-members/{id}", memberId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateJson))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/project-members/{id}", memberId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("OBSERVER"));
+    }
+
     /**
      * Verifie qu'un historique de tache cree via HTTP reste consultable
      * avec ses relations avant sa suppression.

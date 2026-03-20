@@ -1,6 +1,7 @@
 package com.mooc.formulaone.controllers;
 
 import com.mooc.formulaone.controllers.dto.ProjectMemberCreateRequest;
+import com.mooc.formulaone.controllers.dto.ProjectMemberUpdateRequest;
 import com.mooc.formulaone.models.ProjectMember;
 import com.mooc.formulaone.services.ProjectService;
 import com.mooc.formulaone.services.ProjectMemberService;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -123,6 +125,44 @@ public class ProjectMemberController {
         projectMember.setProject(projectService.findById(request.projectId()));
         projectMember.setUser(userService.findById(request.userId()));
         return projectMemberService.create(projectMember);
+    }
+
+    /**
+     * Met a jour le role d'un membre de projet existant.
+     *
+     * @param id identifiant de l'association a modifier
+     * @param request nouveau role et administrateur demandeur
+     */
+    @PutMapping("/project-members/{id}")
+    @ResponseStatus(code = HttpStatus.OK)
+    @Operation(
+            summary = "Modifier le role d'un membre",
+            description = "Permet a un administrateur de projet de modifier le role attribue a un membre deja rattache."
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Nouveau role a appliquer et identifiant de l'administrateur qui realise l'action.",
+            required = true,
+            content = @Content(examples = @ExampleObject(
+                    name = "Passage en observateur",
+                    value = """
+                            {
+                              "role": "OBSERVER",
+                              "requestedById": 1
+                            }
+                            """
+            ))
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Role mis a jour."),
+            @ApiResponse(responseCode = "400", description = "Modification non autorisee ou invalide."),
+            @ApiResponse(responseCode = "404", description = "Association introuvable.")
+    })
+    public void updateRole(
+            @Parameter(description = "Identifiant de l'association membre.", example = "5")
+            @PathVariable Long id,
+            @Valid @RequestBody ProjectMemberUpdateRequest request
+    ) {
+        projectMemberService.updateRole(id, request.role(), request.requestedById());
     }
 
     /**

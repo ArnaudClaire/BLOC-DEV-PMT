@@ -18,6 +18,7 @@ import {
   Task,
   TaskPriority,
   TaskStatus,
+  UpdateProjectMemberPayload,
   UpdateTaskPayload,
   User,
 } from '../../core/models/api.models';
@@ -80,6 +81,7 @@ export class DashboardPageComponent {
   readonly savingInvitation = signal(false);
   readonly savingTaskUpdate = signal(false);
   readonly invitationActionId = signal<number | null>(null);
+  readonly updatingMemberRoleId = signal<number | null>(null);
   readonly errorMessage = signal<string | null>(null);
 
   readonly selectedProjectId = signal<number | 'all'>('all');
@@ -176,7 +178,7 @@ export class DashboardPageComponent {
     return role === 'ADMIN' || role === 'MEMBER';
   });
 
-  readonly canViewTaskDetails = computed(() => this.canManageTasks());
+  readonly canViewTaskDetails = computed(() => this.selectedProject() !== null && this.currentProjectRole() !== null);
 
   readonly totalTasks = computed(() => this.filteredTasks().length);
   readonly completedTasks = computed(() => this.filteredTasks().filter((task) => task.status === 'DONE').length);
@@ -279,7 +281,12 @@ export class DashboardPageComponent {
 
   readonly taskHistories = computed<TaskHistoryView[]>(() => {
     const selectedProject = this.selectedProject();
+    const projectIds = this.visibleProjectIds();
     return this.allTaskHistories().filter((history) => {
+      if (history.projectId === undefined || !projectIds.has(history.projectId)) {
+        return false;
+      }
+
       if (!selectedProject) {
         return true;
       }
@@ -310,6 +317,7 @@ export class DashboardPageComponent {
 
     return [
       'Consulter le tableau de bord',
+      'Ouvrir le detail d’une tache',
       'Voir les notifications personnelles',
       'Voir l’historique des modifications',
     ];
@@ -661,6 +669,44 @@ export class DashboardPageComponent {
 
   /**
    * Sauvegarde les modifications de la tâche ouverte puis referme la modale au succès.
+   */
+  /**
+   * Met a jour le role d'un membre existant a la demande d'un administrateur.
+   */
+  updateProjectMemberRole(memberId: number, role: MemberRole | string): void {
+    const selectedProject = this.selectedProject();
+    if (!selectedProject || !this.canManageMembers()) {
+      return;
+    }
+
+    const member = this.currentProjectMembers().find((candidate) => candidate.id === memberId);
+    if (!member || member.isOwner) {
+      return;
+    }
+
+    const nextRole = role as MemberRole;
+    if (member.role === nextRole) {
+      return;
+    }
+
+    const payload: UpdateProjectMemberPayload = {
+      role: nextRole,
+      requestedById: this.currentUser().id,
+    };
+
+    this.updatingMemberRoleId.set(memberId);
+    this.errorMessage.set(null);
+
+    this.api.updateProjectMember(memberId, payload).pipe(
+      finalize(() => this.updatingMemberRoleId.set(null)),
+    ).subscribe({
+      next: () => this.loadData(),
+      error: (error) => this.errorMessage.set(this.formatError(error)),
+    });
+  }
+
+  /**
+   * Sauvegarde les modifications de la tache ouverte puis referme la modale au succes.
    */
   updateSelectedTask(): void {
     const selectedTask = this.selectedTask();

@@ -98,6 +98,11 @@ export interface CreateProjectMemberPayload {
   userId: number;
 }
 
+export interface UpdateProjectMemberPayload {
+  role: MemberRole;
+  requestedById: number;
+}
+
 /**
  * Représente une invitation de projet avec son état métier.
  */

@@ -103,12 +103,25 @@ WHERE NOT EXISTS (
       AND user_id = (SELECT id FROM users WHERE email = 'claire.observer@pmt.local')
 );
 
-INSERT INTO project_invitations (email, role, status, project_id, created_at, updated_at)
+INSERT INTO project_invitations (
+    email,
+    token,
+    role,
+    status,
+    expires_at,
+    project_id,
+    invited_by_id,
+    created_at,
+    updated_at
+)
 SELECT
     'new.joiner@pmt.local',
+    'seed-invite-new-joiner',
     'MEMBER',
     'PENDING',
+    TIMESTAMP '2026-03-26 09:00:00',
     (SELECT id FROM projects WHERE name = 'PMT Launch'),
+    (SELECT id FROM users WHERE email = 'alice.admin@pmt.local'),
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 WHERE NOT EXISTS (
