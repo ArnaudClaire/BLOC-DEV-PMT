@@ -12,15 +12,20 @@ Ce dossier contient la collection Postman versionnee pour tester l'API PMT.
 La collection utilise notamment :
 
 - `baseUrl`
+- `loginEmail`
+- `loginPassword`
 - `userId`
 - `ownerId`
 - `assigneeId`
 - `projectId`
 - `taskId`
 - `memberId`
+- `requestedById`
 - `invitationId`
+- `invitationToken`
 - `notificationId`
 - `taskHistoryId`
+- `columnId`
 
 L'environnement local versionne propose aussi ces variables pour pointer rapidement vers les donnees prechargees du projet.
 
@@ -40,8 +45,31 @@ En pratique :
 
 1. Lancer l'application
 2. Appeler `GET /users`, `GET /projects` et `GET /tasks` pour retrouver les IDs seed
-3. Mettre a jour les variables Postman si necessaire
-4. Utiliser `POST /users` puis les autres endpoints de creation si besoin
+3. Appeler `POST /auth/login` si tu veux verifier le flux de connexion frontend/backend
+4. Mettre a jour les variables Postman si necessaire
+5. Utiliser `POST /users` puis les autres endpoints de creation si besoin
+
+## Couverture actuelle de la collection
+
+La collection couvre maintenant aussi :
+
+- `POST /auth/login`
+- `PUT /project-members/{id}`
+- `GET /projects/{projectId}/project-invitations`
+- `GET /project-invitations/token/{token}`
+- `POST /project-invitations/token/{token}/accept`
+- `POST /project-invitations/{id}/cancel`
+- `POST /project-invitations/{id}/resend`
+- `PUT /tasks/{id}`
+- `GET /task-board-columns`
+- `GET /projects/{projectId}/task-board-columns`
+- `GET /task-board-columns/{id}`
+- `POST /task-board-columns`
+
+Note utile :
+
+- `POST /project-invitations` attend desormais `invitedById`
+- les routes par token utilisent la variable `invitationToken`
 
 ## URLs de base
 

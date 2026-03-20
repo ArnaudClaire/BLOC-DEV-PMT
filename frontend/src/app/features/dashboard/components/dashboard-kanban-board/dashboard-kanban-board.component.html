@@ -39,6 +39,7 @@
                   class="task-card"
                   [class.interactive]="detailsEnabled()"
                   (click)="detailsEnabled() && taskSelected.emit(task.id)"
+                  [attr.data-testid]="'task-card-' + task.id"
                 >
                   <div class="task-topline">
                     <span class="priority-pill" [attr.data-priority]="task.priority">{{ priorityLabel(task.priority) }}</span>

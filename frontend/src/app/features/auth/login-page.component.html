@@ -42,14 +42,14 @@
 
     <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="submit()">
       <div>
-        <input class="w-full rounded-2xl border border-slate-200 px-4 py-3" formControlName="email" placeholder="email@exemple.com" type="email" [readOnly]="!!invitationToken()" />
+        <input class="w-full rounded-2xl border border-slate-200 px-4 py-3" formControlName="email" placeholder="email@exemple.com" type="email" [readOnly]="!!invitationToken()" data-testid="login-email" />
         @if (hasFieldError('email')) {
           <p class="mt-2 text-sm text-red-700">Saisis une adresse email valide.</p>
         }
       </div>
 
       <div>
-        <input class="w-full rounded-2xl border border-slate-200 px-4 py-3" formControlName="password" placeholder="Mot de passe" type="password" />
+        <input class="w-full rounded-2xl border border-slate-200 px-4 py-3" formControlName="password" placeholder="Mot de passe" type="password" data-testid="login-password" />
         @if (hasFieldError('password')) {
           <p class="mt-2 text-sm text-red-700">Le mot de passe doit contenir au moins 6 caractères.</p>
         }
@@ -59,7 +59,7 @@
         <p class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ errorMessage() }}</p>
       }
 
-      <button class="w-full rounded-full bg-ember px-5 py-3 font-semibold text-white" type="submit">
+      <button class="w-full rounded-full bg-ember px-5 py-3 font-semibold text-white" type="submit" data-testid="login-submit">
         Accéder à la plateforme
       </button>
     </form>

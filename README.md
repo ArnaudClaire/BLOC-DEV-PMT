@@ -391,6 +391,74 @@ Set-Location .\backend
 .\mvnw.cmd test
 ```
 
+## Tests
+
+### Frontend unitaires
+
+Depuis `frontend/` :
+
+```powershell
+npm run test
+```
+
+Pour lancer la suite Angular en mode CI avec Chrome headless :
+
+```powershell
+npm run test:unit
+```
+
+### Frontend end-to-end avec Playwright
+
+Depuis `frontend/` :
+
+```powershell
+npm run test:e2e
+```
+
+Important :
+
+- Playwright demarre automatiquement le frontend sur `http://127.0.0.1:4200`
+- les tests e2e mockent les appels `/api`, donc le backend n'a pas besoin d'etre lance
+- la configuration est dans `frontend/playwright.config.ts`
+- les scenarios sont dans `frontend/e2e/`
+
+Premiere installation sur une machine :
+
+```powershell
+Set-Location .\frontend
+npm install
+npx playwright install
+```
+
+Variantes utiles :
+
+```powershell
+npm run test:e2e -- --headed
+npx playwright test --ui
+```
+
+### Couverture des user stories par les tests e2e
+
+Les tests Playwright couvrent les parcours metier principaux suivants :
+
+- inscription visiteur : `frontend/e2e/register.spec.ts`
+- connexion utilisateur : `frontend/e2e/login.spec.ts`
+- creation de projet : `frontend/e2e/dashboard.spec.ts`
+- invitation d'un membre par email : `frontend/e2e/dashboard.spec.ts`
+- attribution / mise a jour d'un role membre : `frontend/e2e/dashboard.spec.ts`
+- creation de tache : `frontend/e2e/dashboard.spec.ts`
+- assignation de tache : `frontend/e2e/dashboard.spec.ts`
+- mise a jour de tache avec date de fin : `frontend/e2e/dashboard.spec.ts`
+- consultation du detail d'une tache : `frontend/e2e/dashboard.spec.ts`
+- visualisation des taches par statut sur le board : `frontend/e2e/dashboard.spec.ts`
+- consultation des notifications applicatives : `frontend/e2e/dashboard.spec.ts`
+- consultation de l'historique avec filtrage par projet et par visibilite : `frontend/e2e/dashboard.spec.ts`
+
+Note sur la user story email :
+
+- le parcours Playwright verifie bien l'assignation et l'apparition de la notification dans l'application
+- l'envoi d'email lui-meme est verifie cote backend par les tests Java, notamment `backend/src/test/java/com/mooc/formulaone/NotificationServiceImplTest.java`
+
 ## CI/CD
 
 Le depot contient un workflow GitHub Actions dans [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml).

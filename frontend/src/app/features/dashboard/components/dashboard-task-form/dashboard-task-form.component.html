@@ -7,7 +7,7 @@
   <form class="stack-form" [formGroup]="form()" (ngSubmit)="formSubmitted.emit()">
     <label>
       <span>Titre</span>
-      <input formControlName="title" type="text" placeholder="Configurer les invitations, revoir les tests..." />
+      <input formControlName="title" type="text" placeholder="Configurer les invitations, revoir les tests..." data-testid="task-title" />
     </label>
     @if (form().controls['title'].invalid && form().controls['title'].touched) {
       <p class="message error">Le titre doit contenir au moins 3 caractères.</p>
@@ -23,7 +23,7 @@
 
     <label>
       <span>Projet</span>
-      <select formControlName="projectId">
+      <select formControlName="projectId" data-testid="task-project">
         <option [ngValue]="0">Sélectionne un projet</option>
         @for (project of projects(); track project.id) {
           <option [ngValue]="project.id">{{ project.name }}</option>
@@ -37,7 +37,7 @@
     <div class="two-columns">
       <label>
         <span>Priorité</span>
-        <select formControlName="priority">
+        <select formControlName="priority" data-testid="task-priority">
           @for (priority of priorities(); track priority) {
             <option [value]="priority">{{ priorityLabel(priority) }}</option>
           }
@@ -46,7 +46,7 @@
 
       <label>
         <span>Statut initial</span>
-        <select formControlName="status">
+        <select formControlName="status" data-testid="task-status">
           @for (status of statuses(); track status) {
             <option [value]="status">{{ statusLabel(status) }}</option>
           }
@@ -57,7 +57,7 @@
     <div class="two-columns">
       <label>
         <span>Échéance</span>
-        <input formControlName="dueDate" type="date" />
+        <input formControlName="dueDate" type="date" data-testid="task-due-date" />
       </label>
       @if (form().controls['dueDate'].invalid && form().controls['dueDate'].touched) {
         <p class="message error">L'échéance est obligatoire.</p>
@@ -65,7 +65,7 @@
 
       <label>
         <span>Assigné à</span>
-        <select formControlName="assignedToId">
+        <select formControlName="assignedToId" data-testid="task-assignee">
           <option [ngValue]="0">Sélectionne un membre</option>
           @for (user of users(); track user.id) {
             <option [ngValue]="user.id">{{ user.username }}</option>
@@ -77,7 +77,7 @@
       }
     </div>
 
-    <button class="primary-button dark" type="submit" [disabled]="saving() || disabled()">
+    <button class="primary-button dark" type="submit" [disabled]="saving() || disabled()" data-testid="task-submit">
       {{ saving() ? 'Création...' : 'Créer la tâche' }}
     </button>
   </form>
