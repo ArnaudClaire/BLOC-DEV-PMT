@@ -22,6 +22,7 @@ module.exports = function (config) {
       reporters: [
         { type: 'html' },
         { type: 'lcovonly' },
+        { type: 'json-summary' },
         { type: 'text-summary' },
       ],
       check: {
