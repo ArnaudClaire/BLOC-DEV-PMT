@@ -4,6 +4,8 @@ backend/target/
 frontend/node_modules/
 frontend/dist/
 frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
 frontend/.angular/
 frontend/.nx/
 database/*.mv.db
