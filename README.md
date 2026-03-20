@@ -317,6 +317,40 @@ Contraintes importantes de conception :
 - `assigned_to_id`, `accepted_by_id` et `task_id` dans `notifications` sont optionnels
 - les roles et statuts sont controles par des `CHECK`
 
+#### Nullabilite Et Contraintes
+
+| Table | Champs obligatoires | Champs optionnels | Contraintes notables |
+| --- | --- | --- | --- |
+| `users` | `username`, `email`, `password_hash` | `created_at`, `updated_at` | `email` unique |
+| `projects` | `name` | `description`, `start_date`, `owner_id`, `created_at`, `updated_at` | `owner_id` reference `users.id` |
+| `project_members` | `role`, `project_id`, `user_id` | `joined_at`, `created_at`, `updated_at` | unicite `(project_id, user_id)` |
+| `project_invitations` | `email`, `role`, `status`, `project_id`, `invited_by_id` | `token`, `expires_at`, `accepted_at`, `canceled_at`, `accepted_by_id`, `created_at`, `updated_at` | `token` unique |
+| `task_board_columns` | `name`, `project_id` | `display_order`, `created_at`, `updated_at` | unicite `(project_id, name)` |
+| `tasks` | `title`, `status`, `priority`, `project_id`, `created_by_id` | `description`, `due_date`, `end_date`, `assigned_to_id`, `created_at`, `updated_at` | `assigned_to_id` nullable |
+| `task_histories` | `action_type`, `field_name`, `task_id`, `changed_by_id` | `old_value`, `new_value`, `created_at`, `updated_at` | historisation des changements |
+| `notifications` | `type`, `status`, `message`, `user_id` | `sent_at`, `task_id`, `created_at`, `updated_at` | `task_id` nullable |
+
+#### Valeurs Controlees Par Le Modele
+
+| Champ | Valeurs attendues |
+| --- | --- |
+| `project_members.role` | `ADMIN`, `MEMBER`, `OBSERVER` |
+| `project_invitations.role` | `ADMIN`, `MEMBER`, `OBSERVER` |
+| `project_invitations.status` | `PENDING`, `ACCEPTED`, `DECLINED`, `EXPIRED`, `CANCELED` |
+| `tasks.priority` | `LOW`, `MEDIUM`, `HIGH` |
+| `task_histories.action_type` | `CREATED`, `UPDATED`, `ASSIGNED`, `STATUS_CHANGED`, `COMPLETED` |
+| `notifications.type` | `TASK_ASSIGNED`, `INVITATION_SENT` |
+| `notifications.status` | `SENT`, `READ` |
+
+#### Regles Metier A Faire Apparaitre En Soutenance
+
+- un projet possede un proprietaire via `projects.owner_id`
+- un utilisateur peut appartenir a plusieurs projets via `project_members`
+- une invitation de projet est reliee a un projet, a un emetteur et eventuellement a un utilisateur ayant accepte
+- une tache appartient a un seul projet et peut etre assignee a un utilisateur du projet
+- l'historique des taches permet de tracer qui a modifie quoi et quand
+- une notification peut etre liee a une tache, mais ce n'est pas obligatoire
+
 ### Frontend
 
 - Stack : Angular 19, Nx, TypeScript, SCSS, Tailwind CSS.
