@@ -1,3 +1,17 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.debug.settings.enableRunDebugCodeLens": true,
+    "java.test.editor.enableShortcuts": true,
+    "files.watcherExclude": {
+        "**/target": true
+    },
+    "java.test.config": [
+        {
+            "name": "Backend - Tous les tests",
+            "workingDirectory": "${workspaceFolder}/backend",
+            "testKind": "junit"
+        }
+    ],
+    "java.test.defaultConfig": "Backend - Tous les tests",
+    "trunk.autoInit": false
 }

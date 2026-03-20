@@ -1,10 +1,10 @@
 # PMT
 
-Application de gestion de projet composee d'un frontend Angular et d'un backend Spring Boot.
+Application de gestion de projet composée d'un frontend Angular et d'un backend Spring Boot.
 
-## Architecture Globale
+## Architecture globale
 
-Le projet est organise autour de 4 zones principales :
+Le projet est organisé autour de 4 zones principales :
 
 ```text
 pmt/
@@ -17,18 +17,18 @@ pmt/
 └── README.md
 ```
 
-- `backend/` : API REST Spring Boot, logique metier, acces base de donnees et tests Java.
-- `frontend/` : application Angular/Nx, interface utilisateur, proxy de dev vers l'API.
-- `database/` : ressources et artefacts lies a la base locale.
-- `docs/` : documentation technique et collection Postman.
-- `.github/workflows/` : futur emplacement des pipelines CI/CD.
-- `docker-compose.yml` : demarrage de PostgreSQL et du backend en conteneurs.
+- `backend/` : API REST Spring Boot, logique métier, accès à la base de données et tests Java
+- `frontend/` : application Angular/Nx, interface utilisateur, proxy de développement vers l'API
+- `database/` : ressources et artefacts liés à la base locale
+- `docs/` : documentation technique et collection Postman
+- `.github/workflows/` : futur emplacement des pipelines CI/CD
+- `docker-compose.yml` : démarrage de PostgreSQL et du backend en conteneurs
 
-## Vue D'Ensemble Technique
+## Vue d'ensemble technique
 
 ### Backend
 
-- Stack : Java 17, Spring Boot 3, Spring Web, Spring Data JPA, Spring Security, PostgreSQL.
+- Stack : Java 17, Spring Boot 3, Spring Web, Spring Data JPA, Spring Security, PostgreSQL
 - Port local : `8081`
 - Base principale : PostgreSQL
 - Tests : JUnit / Spring Boot Test / H2
@@ -43,7 +43,7 @@ Le backend expose des endpoints REST pour :
 - `task-histories`
 - `notifications`
 
-### Diagramme De Classes
+### Diagramme de classes
 
 ```mermaid
 classDiagram
@@ -188,9 +188,9 @@ Notification --> NotificationType
 Notification --> NotificationStatus
 ```
 
-### Schema De Base De Donnees
+### Schéma de base de données
 
-Le diagramme ci-dessous reprend la structure relationnelle versionnee dans `database/migrations/V1__initial_schema_postgresql.sql`.
+Le diagramme ci-dessous reprend la structure relationnelle versionnée dans `database/migrations/V1__initial_schema_postgresql.sql`.
 
 ```mermaid
 erDiagram
@@ -315,22 +315,22 @@ Contraintes importantes de conception :
 - `project_invitations.token` est unique
 - `task_board_columns (project_id, name)` est unique
 - `assigned_to_id`, `accepted_by_id` et `task_id` dans `notifications` sont optionnels
-- les roles et statuts sont controles par des `CHECK`
+- les rôles et statuts sont contrôlés par des `CHECK`
 
-#### Nullabilite Et Contraintes
+#### Nullabilité et contraintes
 
 | Table | Champs obligatoires | Champs optionnels | Contraintes notables |
 | --- | --- | --- | --- |
 | `users` | `username`, `email`, `password_hash` | `created_at`, `updated_at` | `email` unique |
-| `projects` | `name` | `description`, `start_date`, `owner_id`, `created_at`, `updated_at` | `owner_id` reference `users.id` |
-| `project_members` | `role`, `project_id`, `user_id` | `joined_at`, `created_at`, `updated_at` | unicite `(project_id, user_id)` |
+| `projects` | `name` | `description`, `start_date`, `owner_id`, `created_at`, `updated_at` | `owner_id` référence `users.id` |
+| `project_members` | `role`, `project_id`, `user_id` | `joined_at`, `created_at`, `updated_at` | unicité `(project_id, user_id)` |
 | `project_invitations` | `email`, `role`, `status`, `project_id`, `invited_by_id` | `token`, `expires_at`, `accepted_at`, `canceled_at`, `accepted_by_id`, `created_at`, `updated_at` | `token` unique |
-| `task_board_columns` | `name`, `project_id` | `display_order`, `created_at`, `updated_at` | unicite `(project_id, name)` |
+| `task_board_columns` | `name`, `project_id` | `display_order`, `created_at`, `updated_at` | unicité `(project_id, name)` |
 | `tasks` | `title`, `status`, `priority`, `project_id`, `created_by_id` | `description`, `due_date`, `end_date`, `assigned_to_id`, `created_at`, `updated_at` | `assigned_to_id` nullable |
 | `task_histories` | `action_type`, `field_name`, `task_id`, `changed_by_id` | `old_value`, `new_value`, `created_at`, `updated_at` | historisation des changements |
 | `notifications` | `type`, `status`, `message`, `user_id` | `sent_at`, `task_id`, `created_at`, `updated_at` | `task_id` nullable |
 
-#### Valeurs Controlees Par Le Modele
+#### Valeurs contrôlées par le modèle
 
 | Champ | Valeurs attendues |
 | --- | --- |
@@ -342,39 +342,39 @@ Contraintes importantes de conception :
 | `notifications.type` | `TASK_ASSIGNED`, `INVITATION_SENT` |
 | `notifications.status` | `SENT`, `READ` |
 
-#### Regles Metier A Faire Apparaitre En Soutenance
+#### Règles métier
 
-- un projet possede un proprietaire via `projects.owner_id`
-- un utilisateur peut appartenir a plusieurs projets via `project_members`
-- une invitation de projet est reliee a un projet, a un emetteur et eventuellement a un utilisateur ayant accepte
-- une tache appartient a un seul projet et peut etre assignee a un utilisateur du projet
-- l'historique des taches permet de tracer qui a modifie quoi et quand
-- une notification peut etre liee a une tache, mais ce n'est pas obligatoire
+- un projet possède un propriétaire via `projects.owner_id`
+- un utilisateur peut appartenir à plusieurs projets via `project_members`
+- une invitation de projet est reliée à un projet, à un émetteur et éventuellement à un utilisateur ayant accepté
+- une tâche appartient à un seul projet et peut être assignée à un utilisateur du projet
+- l'historique des tâches permet de tracer qui a modifié quoi et quand
+- une notification peut être liée à une tâche, mais ce n'est pas obligatoire
 
 ### Frontend
 
-- Stack : Angular 19, Nx, TypeScript, SCSS, Tailwind CSS.
+- Stack : Angular 19, Nx, TypeScript, SCSS, Tailwind CSS
 - Port local : `4200`
-- Proxy de dev : `/api` vers `http://localhost:8081`
+- Proxy de développement : `/api` vers `http://localhost:8081`
 
 Le frontend propose aujourd'hui :
 
 - inscription
 - connexion simple par email
 - persistance de session en `localStorage`
-- dashboard avec projets et taches
-- creation de projets et de taches
+- dashboard avec projets et tâches
+- création de projets et de tâches
 
 ## Installation
 
-### Prerequis
+### Prérequis
 
 - Java 17
 - Node.js 20.19.0 LTS minimum
 - npm
 - Docker Desktop
 
-### Version de Node recommandee
+### Version de Node recommandée
 
 Le frontend cible explicitement `Node 20.19.0 LTS`.
 
@@ -386,11 +386,11 @@ nvm use 20.19.0
 node -v
 ```
 
-Le projet contient aussi un fichier `.nvmrc` a la racine et dans `frontend/`.
+Le projet contient aussi un fichier `.nvmrc` à la racine et dans `frontend/`.
 
 ### Variables d'environnement
 
-Copier `.env.example` vers `.env` si besoin, puis verifier :
+Copier `.env.example` vers `.env` si besoin, puis vérifier :
 
 ```env
 POSTGRES_DB=pmtdb
@@ -423,7 +423,7 @@ APP_MAIL_FROM=no-reply@pmt.local
 
 Si `SPRING_MAIL_HOST` reste vide, le backend n'envoie pas de vrai mail et journalise simplement le lien d'invitation dans la console.
 
-### Installation des dependances
+### Installation des dépendances
 
 Frontend :
 
@@ -439,24 +439,24 @@ Set-Location ..\backend
 .\mvnw.cmd -q -DskipTests dependency:go-offline
 ```
 
-Cette commande prepare les dependances Maven du backend.
+Cette commande prépare les dépendances Maven du backend.
 
-Pour verifier ensuite que le backend compile et que les tests passent :
+Pour vérifier ensuite que le backend compile et que les tests passent :
 
 ```powershell
 .\mvnw.cmd test
 ```
 
-Important :
+À retenir :
 
-- `.\mvnw.cmd test` ne demarre pas le backend Docker
+- `.\mvnw.cmd test` ne démarre pas le backend Docker
 - `.\mvnw.cmd test` n'a pas besoin que `docker compose` tourne
-- les tests backend utilisent une base H2 en memoire dans `backend/src/test/resources/`
-- apres avoir arrete `.\start-dev.ps1`, tu peux relancer `.\mvnw.cmd test` dans le meme terminal sans ecraser la datasource du profil `test`
+- les tests backend utilisent une base H2 en mémoire dans `backend/src/test/resources/`
+- après avoir arrêté `.\start-dev.ps1`, tu peux relancer `.\mvnw.cmd test` dans le même terminal sans écraser la datasource du profil `test`
 
-## Demarrage Du Projet
+## Démarrage du projet
 
-### Option 1 : demarrage local front + back
+### Option 1 : démarrage local front + back
 
 Depuis la racine :
 
@@ -468,18 +468,18 @@ Ce script :
 
 - charge les variables du fichier `.env`
 - adapte `SPRING_DATASOURCE_URL` vers `localhost:5433` quand le backend tourne en local
-- demarre le service `postgres` de `docker compose` si necessaire
-- verifie que Node 20.19.0 LTS minimum est actif
-- lance le frontend dans une nouvelle fenetre PowerShell
+- démarre le service `postgres` de `docker compose` si nécessaire
+- vérifie que Node 20.19.0 LTS minimum est actif
+- lance le frontend dans une nouvelle fenêtre PowerShell
 - lance le backend dans le terminal courant
-- restaure les variables d'environnement de la session quand le backend s'arrete
+- restaure les variables d'environnement de la session quand le backend s'arrête
 
 Application disponible sur :
 
 - Frontend : `http://localhost:4200`
 - Backend : `http://localhost:8081`
 
-### Option 2 : demarrage separe
+### Option 2 : démarrage séparé
 
 Backend :
 
@@ -495,14 +495,14 @@ Set-Location .\frontend
 npm start
 ```
 
-Important :
+À retenir :
 
-- cette option ne charge pas automatiquement le fichier `.env` a la racine
-- si tu veux tester les invitations email avec SMTP en demarrage separe, il faut soit passer par `.\start-dev.ps1`, soit exporter les variables d'environnement manuellement avant de lancer Spring Boot
+- cette option ne charge pas automatiquement le fichier `.env` à la racine
+- si tu veux tester les invitations email avec SMTP en démarrage séparé, il faut soit passer par `.\start-dev.ps1`, soit exporter les variables d'environnement manuellement avant de lancer Spring Boot
 
-## Comptes De Demo
+## Comptes de démo
 
-Au demarrage du backend, 3 comptes de demonstration sont seedes pour tester rapidement la connexion et les roles de projet.
+Au démarrage du backend, 3 comptes de démonstration sont seedés pour tester rapidement la connexion et les rôles de projet.
 
 Mot de passe commun :
 
@@ -510,14 +510,14 @@ Mot de passe commun :
 demo123
 ```
 
-- `alice.admin@pmt.local` : role `ADMIN` sur le projet `PMT Launch`
-- `bob.member@pmt.local` : role `MEMBER` sur le projet `PMT Launch`
-- `claire.observer@pmt.local` : role `OBSERVER` sur le projet `Mobile Refresh`
+- `alice.admin@pmt.local` : rôle `ADMIN` sur le projet `PMT Launch`
+- `bob.member@pmt.local` : rôle `MEMBER` sur le projet `PMT Launch`
+- `claire.observer@pmt.local` : rôle `OBSERVER` sur le projet `Mobile Refresh`
 
-Important :
+À retenir :
 
-- ces roles sont des roles de membership par projet, pas des roles globaux utilisateur
-- si le backend tournait deja avant la modification, redemarre-le pour reappliquer `backend/src/main/resources/data.sql`
+- ces rôles sont des rôles de membership par projet, pas des rôles globaux utilisateur
+- si le backend tournait déjà avant la modification, redémarre-le pour réappliquer `backend/src/main/resources/data.sql`
 
 ### Option 3 : backend + base via Docker
 
@@ -527,14 +527,14 @@ Depuis la racine :
 docker compose up --build
 ```
 
-Cela demarre :
+Cela démarre :
 
 - PostgreSQL sur `localhost:5433`
 - le backend sur `http://localhost:8081`
 
-Le frontend reste a lancer localement avec `npm start`.
+Le frontend reste à lancer localement avec `npm start`.
 
-## Commandes Utiles
+## Commandes utiles
 
 Frontend :
 
@@ -578,14 +578,14 @@ Depuis `frontend/` :
 npm run test:e2e
 ```
 
-Important :
+À retenir :
 
-- Playwright demarre automatiquement le frontend sur `http://127.0.0.1:4200`
-- les tests e2e mockent les appels `/api`, donc le backend n'a pas besoin d'etre lance
+- Playwright démarre automatiquement le frontend sur `http://127.0.0.1:4200`
+- les tests e2e mockent les appels `/api`, donc le backend n'a pas besoin d'être lancé
 - la configuration est dans `frontend/playwright.config.ts`
-- les scenarios sont dans `frontend/e2e/`
+- les scénarios sont dans `frontend/e2e/`
 
-Premiere installation sur une machine :
+Première installation sur une machine :
 
 ```powershell
 Set-Location .\frontend
@@ -602,29 +602,29 @@ npx playwright test --ui
 
 ### Couverture des user stories par les tests e2e
 
-Les tests Playwright couvrent les parcours metier principaux suivants :
+Les tests Playwright couvrent les parcours métier principaux suivants :
 
 - inscription visiteur : `frontend/e2e/register.spec.ts`
 - connexion utilisateur : `frontend/e2e/login.spec.ts`
-- creation de projet : `frontend/e2e/dashboard.spec.ts`
+- création de projet : `frontend/e2e/dashboard.spec.ts`
 - invitation d'un membre par email : `frontend/e2e/dashboard.spec.ts`
-- attribution / mise a jour d'un role membre : `frontend/e2e/dashboard.spec.ts`
-- creation de tache : `frontend/e2e/dashboard.spec.ts`
-- assignation de tache : `frontend/e2e/dashboard.spec.ts`
-- mise a jour de tache avec date de fin : `frontend/e2e/dashboard.spec.ts`
-- consultation du detail d'une tache : `frontend/e2e/dashboard.spec.ts`
-- visualisation des taches par statut sur le board : `frontend/e2e/dashboard.spec.ts`
+- attribution / mise à jour d'un rôle membre : `frontend/e2e/dashboard.spec.ts`
+- création de tâche : `frontend/e2e/dashboard.spec.ts`
+- assignation de tâche : `frontend/e2e/dashboard.spec.ts`
+- mise à jour de tâche avec date de fin : `frontend/e2e/dashboard.spec.ts`
+- consultation du détail d'une tâche : `frontend/e2e/dashboard.spec.ts`
+- visualisation des tâches par statut sur le board : `frontend/e2e/dashboard.spec.ts`
 - consultation des notifications applicatives : `frontend/e2e/dashboard.spec.ts`
-- consultation de l'historique avec filtrage par projet et par visibilite : `frontend/e2e/dashboard.spec.ts`
+- consultation de l'historique avec filtrage par projet et par visibilité : `frontend/e2e/dashboard.spec.ts`
 
 Note sur la user story email :
 
-- le parcours Playwright verifie bien l'assignation et l'apparition de la notification dans l'application
-- l'envoi d'email lui-meme est verifie cote backend par les tests Java, notamment `backend/src/test/java/com/mooc/formulaone/NotificationServiceImplTest.java`
+- le parcours Playwright vérifie bien l'assignation et l'apparition de la notification dans l'application
+- l'envoi d'email lui-même est vérifié côté backend par les tests Java, notamment `backend/src/test/java/com/mooc/formulaone/NotificationServiceImplTest.java`
 
 ## CI/CD
 
-Le depot contient un workflow GitHub Actions dans [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml).
+Le dépôt contient un workflow GitHub Actions dans [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml).
 
 Ce pipeline :
 
@@ -648,7 +648,7 @@ DOCKERHUB_BACKEND_IMAGE
 DOCKERHUB_FRONTEND_IMAGE
 ```
 
-Si ces variables ne sont pas definies, le workflow utilisera par defaut :
+Si ces variables ne sont pas définies, le workflow utilisera par défaut :
 
 ```text
 <DOCKERHUB_USERNAME>/pmt-backend
@@ -656,7 +656,7 @@ Si ces variables ne sont pas definies, le workflow utilisera par defaut :
 ```
 
 Le frontend dispose maintenant d'un conteneur Nginx dans [`frontend/Dockerfile`](frontend/Dockerfile).
-Par defaut, il attend un backend HTTP disponible via la variable d'environnement runtime :
+Par défaut, il attend un backend HTTP disponible via la variable d'environnement runtime :
 
 ```text
 API_UPSTREAM=http://backend:8081
@@ -667,19 +667,19 @@ Cette variable sert au proxy Nginx pour les appels `/api`.
 ## Documentation
 
 - Collection Postman : `docs/postman/`
-- Schema BDD versionne : `database/migrations/V1__initial_schema_postgresql.sql`
+- Schéma BDD versionné : `database/migrations/V1__initial_schema_postgresql.sql`
 - Configuration Docker : `docker-compose.yml`
 - Variables d'environnement d'exemple : `.env.example`
 
-## Points D'Attention
+## Points clés
 
-Les principaux contrats frontend/backend ont ete alignes :
+Les principaux contrats frontend/backend ont été alignés :
 
-- la connexion passe maintenant par `POST /auth/login` avec verification reelle du mot de passe cote backend
-- la creation de projet envoie bien `ownerId`
-- le frontend reutilise les memes enums de base que le backend pour les statuts et priorites exposes
-- le service API frontend normalise les objets lies du backend en champs exploitables par l'interface comme `projectId`, `assignedToId` et `createdById`
+- la connexion passe maintenant par `POST /auth/login` avec vérification réelle du mot de passe côté backend
+- la création de projet envoie bien `ownerId`
+- le frontend réutilise les mêmes enums de base que le backend pour les statuts et priorités exposés
+- le service API frontend normalise les objets liés du backend en champs exploitables par l'interface comme `projectId`, `assignedToId` et `createdById`
 - les invitations de projet peuvent maintenant passer par email avec un lien `/invitation/:token`
-- le mail part vraiment seulement si SMTP est configure dans `.env`
+- le mail part vraiment seulement si SMTP est configuré dans `.env`
 
-Il reste encore possible d'ameliorer le projet sur des aspects produit ou UX, mais la base de communication entre front et back est maintenant coherente.
+Il reste encore possible d'améliorer le projet sur des aspects produit ou UX, mais la base de communication entre front et back est maintenant cohérente.
